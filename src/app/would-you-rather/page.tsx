@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useGame } from "@/context/GameContext";
@@ -34,7 +34,7 @@ const TIERS = [
 
 export default function WouldYouRatherPage() {
   const { playerNames } = useGame();
-  const [phase, setPhase] = useState<Phase>(playerNames ? "loading" : "names");
+  const [phase, setPhase] = useState<Phase>("names");
   const [category, setCategory] = useState<WyrCategory>("shuffle");
   const [dilemmas, setDilemmas] = useState<WouldYouRatherDilemma[]>([]);
   const [usedDilemmas, setUsedDilemmas] = useState<string[]>([]);
@@ -115,13 +115,6 @@ export default function WouldYouRatherPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [fetchDilemmas, usedDilemmas, category]
   );
-
-  useEffect(() => {
-    if (phase === "loading" && playerNames) {
-      loadDilemmas();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleStart = () => {
     loadDilemmas();
@@ -250,7 +243,7 @@ export default function WouldYouRatherPage() {
     loadDilemmas();
   };
 
-  if (!playerNames && phase === "names") {
+  if (phase === "names") {
     return (
       <div className="min-h-[100dvh] flex flex-col items-center justify-center px-5 py-6">
         <Link
@@ -266,9 +259,27 @@ export default function WouldYouRatherPage() {
         >
           Would You Rather
         </motion.h1>
-        <p className="font-body text-cream/50 text-xs text-center mb-6 max-w-xs">
+        <p className="font-body text-cream/50 text-xs text-center mb-4 max-w-xs">
           Do you think alike? Pick the same answer to score!
         </p>
+
+        {/* Category tabs on intro screen */}
+        <div className="flex gap-1.5 mb-6 w-full max-w-sm">
+          {WYR_CATEGORIES.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => { vibrate(20); setCategory(cat.value); }}
+              className={`relative flex-1 py-2 rounded-lg font-body text-xs font-medium transition-colors min-h-[36px] ${
+                category === cat.value
+                  ? "bg-gold/20 border border-gold/30 text-gold"
+                  : "bg-burgundy-dark/50 border border-gold/10 text-cream/40"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
         <NameEntry onStart={handleStart} />
       </div>
     );

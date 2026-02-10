@@ -30,17 +30,81 @@ Each topic should be a specific question or prompt — not just a broad theme. M
 Return a JSON array of ${count} strings.
 Example: ["If you could relive one day from our relationship, which would it be?", "What's a dream you've never told anyone about?"]${excludeClause}`;
 
-    case "mr-and-mrs":
-      return `Generate ${count} fun "Who is more likely to..." or "Who is the biggest..." questions for a couples game. These should be playful questions where both partners independently pick which person the question applies to more.
+    case "mr-and-mrs": {
+      const isSpicy = options.spiceLevel === "spicy";
 
-Mix question types:
-- "Who is more likely to..." (future/hypothetical)
-- "Who is the biggest..." (personality traits)
-- "Who would..." (hypothetical scenarios)
+      const spicyInstructions = isSpicy
+        ? `SPICY MODE. ALL questions must be sexual or morally edgy. Every item must have spicy: true. No clean/standard questions in this batch.
 
-Keep them fun, revealing, and conversation-starting. Avoid anything mean-spirited.
+Good spicy examples:
+- "Who has had the most sexual partners?"
+- "Who is most likely to have a threesome?"
+- "Who is most likely to cheat?"
+- "Who has the wilder search history?"
+- "Who is more likely to sleep with someone on the first date?"
+- "Who is more likely to have a secret they've never told anyone?"
+- "Who would be more likely to lie to the police?"
+- "Who is more likely to have hooked up with a friend?"
+- "Who has done the most embarrassing thing they'd never want made public?"
+- "Who is most likely to send a nude to the wrong person?"
+- "Who would be more likely to have a one-night stand with a stranger?"
+- "Who is more likely to have been the other woman/man?"
+- "Who is most likely to read their partner's messages without telling them?"
+- "Who is more likely to kiss someone else on a night out?"
+- "Who has told the bigger lie?"
 
-Return a JSON array of ${count} strings. Each string should be just the question part (e.g., "Who is more likely to cry during a movie?").${excludeClause}`;
+Spicy questions should make people squirm slightly before answering. A mix of sexually extreme and morally dubious.`
+        : `STANDARD MODE. ALL questions must be clean and non-sexual. Every item must have spicy: false. Fun, provocative, personality-revealing questions. Not sexual but not boring. These should trigger playful arguments.`;
+
+      return `Generate ${count} "Who is more likely to..." / "Who is the bigger..." / "Who would..." questions for a two-player game where both players independently pick which person the question applies to more.
+
+${spicyInstructions}
+
+Good standard examples:
+- "Who is more likely to survive a zombie apocalypse?"
+- "Who is more likely to start an argument over something petty?"
+- "Who would last longer without their phone?"
+- "Who is more likely to talk their way out of a speeding ticket?"
+- "Who is the bigger drama queen?"
+- "Who would be worse in a survival situation?"
+- "Who is more likely to accidentally go viral on social media?"
+- "Who would win in a physical fight?"
+- "Who is the bigger flirt?"
+- "Who gives better advice?"
+- "Who is more likely to quit their job on impulse?"
+- "Who would handle being arrested more calmly?"
+- "Who is more competitive?"
+- "Who is more likely to do karaoke completely sober?"
+- "Who has better stories from their teenage years?"
+- "Who is more likely to say something inappropriate at the wrong moment?"
+- "Who would be better at keeping a secret?"
+- "Who is more likely to take a board game way too seriously?"
+- "Who is the bigger risk-taker?"
+- "Who is more likely to befriend a complete stranger?"
+
+Bad examples (do NOT generate questions like these):
+- "Who is the biggest foodie?" (boring, no debate)
+- "Who is more likely to forget where they put their keys?" (mundane, no story)
+- "Who is more likely to cry during a romantic movie?" (cliche, predictable)
+- "Who is more likely to plan a surprise date?" (too romance-focused)
+- "Who is more likely to say I love you first?" (assumes romantic relationship)
+
+RULES (follow these strictly):
+- Never use emdashes. Use parentheses if clarification is needed.
+- Questions must work as "[Name] or [Name]" answers.
+- Questions should work equally well for friends, new couples, or long-term couples. Never assume anything about the relationship.
+- British English spelling throughout.
+- Every question should spark a genuine debate. If both players would obviously give the same answer, the question is too easy.
+- Questions should be about the two players specifically, not hypothetical scenarios about others.
+- Keep questions concise. One sentence, no caveats or clarifications needed.
+- "Who is more likely to...", "Who would...", and "Who is the bigger..." are the right formats.
+
+The test for a good standard question: would two friends playing this game find it just as fun as a couple?
+
+Return a JSON array of ${count} objects. Each object has "question" (string) and "spicy" (boolean).
+Do NOT include any prefix (the app adds "[Name], " before displaying).
+Example: [{"question": "Who is more likely to survive a zombie apocalypse?", "spicy": false}]${excludeClause}`;
+    }
 
     case "never-have-i-ever": {
       const spiceInstructions = {

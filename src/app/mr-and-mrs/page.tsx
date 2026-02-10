@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useGame } from "@/context/GameContext";
@@ -10,11 +10,13 @@ import RevealResult from "@/components/RevealResult";
 import ScoreTracker from "@/components/ScoreTracker";
 import EndScreen from "@/components/EndScreen";
 import LoadingState from "@/components/LoadingState";
+import { MrAndMrsQuestion } from "@/lib/types";
 import { vibrate } from "@/lib/haptics";
 
 type Phase =
   | "names"
   | "loading"
+  | "pass-to-p1"
   | "p1-answer"
   | "pass-to-p2"
   | "p2-answer"
@@ -32,8 +34,9 @@ const TIERS = [
 
 export default function MrAndMrsPage() {
   const { playerNames } = useGame();
-  const [phase, setPhase] = useState<Phase>(playerNames ? "loading" : "names");
-  const [questions, setQuestions] = useState<string[]>([]);
+  const [phase, setPhase] = useState<Phase>("names");
+  const [spicyMode, setSpicyMode] = useState(false);
+  const [questions, setQuestions] = useState<MrAndMrsQuestion[]>([]);
   const [usedQuestions, setUsedQuestions] = useState<string[]>([]);
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
@@ -44,19 +47,20 @@ export default function MrAndMrsPage() {
   const currentQuestion = questions[0];
 
   const fetchQuestions = useCallback(
-    async (exclude: string[]) => {
+    async (exclude: string[], spicy: boolean) => {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           game: "mr-and-mrs",
+          spiceLevel: spicy ? "spicy" : undefined,
           count: 10,
           exclude,
         }),
       });
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
-      return data.items as string[];
+      return data.items as MrAndMrsQuestion[];
     },
     []
   );
@@ -65,23 +69,36 @@ export default function MrAndMrsPage() {
     setPhase("loading");
     setError(null);
     try {
-      const items = await fetchQuestions(usedQuestions);
+      const items = await fetchQuestions(usedQuestions, spicyMode);
       setQuestions(items);
-      setPhase("p1-answer");
+      setPhase("pass-to-p1");
     } catch {
       setError("Shuffling the deck... try again!");
     }
-  }, [fetchQuestions, usedQuestions]);
-
-  useEffect(() => {
-    if (phase === "loading" && playerNames) {
-      loadQuestions();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchQuestions, usedQuestions, spicyMode]);
 
   const handleStart = () => {
     loadQuestions();
+  };
+
+  const handleSpicyToggle = () => {
+    vibrate(20);
+    const newSpicy = !spicyMode;
+    setSpicyMode(newSpicy);
+    console.log("[M&M] Spicy toggled to:", newSpicy);
+
+    // Check if we have questions matching the new mode
+    const remaining = questions.slice(1);
+    const matchingCount = remaining.filter((q) => q.spicy === newSpicy).length;
+    console.log("[M&M] Matching questions in pool:", matchingCount);
+
+    if (matchingCount < 3) {
+      console.log("[M&M] Not enough matching questions, fetching...");
+      fetchQuestions(usedQuestions, newSpicy).then((items) => {
+        console.log("[M&M] Fetched batch:", items.map((q) => ({ q: q.question.slice(0, 40), spicy: q.spicy })));
+        setQuestions((prev) => [...prev, ...items]);
+      });
+    }
   };
 
   const handleP1Answer = (answer: string) => {
@@ -103,25 +120,48 @@ export default function MrAndMrsPage() {
     setP2Answer(null);
 
     // Move to next question
-    const remaining = questions.slice(1);
-    setUsedQuestions((prev) => [...prev, currentQuestion]);
-    setQuestions(remaining);
+    let remaining = questions.slice(1);
+    setUsedQuestions((prev) => [...prev, currentQuestion.question]);
+
+    // Filter to only show questions matching current mode
+    remaining = remaining.filter((q) => q.spicy === spicyMode);
 
     if (round >= TOTAL_ROUNDS) {
+      setQuestions(remaining);
       setPhase("end");
       return;
     }
 
     setRound((r) => r + 1);
 
+    const newUsed = [...usedQuestions, currentQuestion.question];
+
+    // If no items left, fetch immediately
+    if (remaining.length === 0) {
+      setQuestions([]);
+      setPhase("loading");
+      setError(null);
+      fetchQuestions(newUsed, spicyMode)
+        .then((items) => {
+          setQuestions(items);
+          setPhase("pass-to-p1");
+        })
+        .catch(() => {
+          setError("Shuffling the deck... try again!");
+        });
+      return;
+    }
+
+    setQuestions(remaining);
+
     // Refetch if running low
     if (remaining.length < 3) {
-      fetchQuestions([...usedQuestions, currentQuestion]).then((items) => {
+      fetchQuestions(newUsed, spicyMode).then((items) => {
         setQuestions((prev) => [...prev, ...items]);
       });
     }
 
-    setPhase("p1-answer");
+    setPhase("pass-to-p1");
   };
 
   const handlePlayAgain = () => {
@@ -133,7 +173,7 @@ export default function MrAndMrsPage() {
     loadQuestions();
   };
 
-  if (!playerNames && phase === "names") {
+  if (phase === "names") {
     return (
       <div className="min-h-[100dvh] flex flex-col items-center justify-center px-5 py-6">
         <Link
@@ -153,21 +193,80 @@ export default function MrAndMrsPage() {
           How well do you know each other? Answer separately — you score a
           point when you agree!
         </p>
+
+        {/* Spicy toggle on intro screen */}
+        <div className="w-full max-w-sm mb-6">
+          <button
+            onClick={() => { vibrate(20); setSpicyMode((s) => !s); }}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-cream/5 border border-gold/15 transition-colors"
+          >
+            <span className="font-body text-cream/70 text-sm">
+              {spicyMode ? "🌶️ Spicy" : "😇 Keep it clean"}
+            </span>
+            <div
+              className={`w-11 h-6 rounded-full transition-colors relative ${
+                spicyMode ? "bg-hearts-red/60" : "bg-cream/20"
+              }`}
+            >
+              <motion.div
+                layout
+                className="absolute top-0.5 w-5 h-5 rounded-full bg-cream shadow-sm"
+                animate={{ left: spicyMode ? 22 : 2 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            </div>
+          </button>
+        </div>
+
         <NameEntry onStart={handleStart} />
       </div>
     );
   }
 
+  const showInGameToggle =
+    phase === "loading" ||
+    phase === "pass-to-p1" ||
+    phase === "p1-answer" ||
+    phase === "pass-to-p2" ||
+    phase === "p2-answer" ||
+    phase === "reveal";
+
   return (
     <div className="min-h-[100dvh] flex flex-col items-center px-5 py-6 safe-top safe-bottom">
       {/* Header */}
-      <div className="w-full max-w-sm mb-4">
+      <div className="w-full max-w-sm mb-4 flex items-center justify-between">
         <Link
           href="/"
           className="font-body text-cream/60 text-sm hover:text-cream transition-colors"
         >
           ← Back
         </Link>
+
+        {/* In-game spicy toggle */}
+        {showInGameToggle && (
+          <button
+            onClick={handleSpicyToggle}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-body transition-colors ${
+              spicyMode
+                ? "bg-hearts-red/20 border border-hearts-red/30 text-hearts-red"
+                : "bg-cream/10 border border-gold/15 text-cream/40"
+            }`}
+          >
+            {spicyMode ? "🌶️" : "😇"}
+            <div
+              className={`w-7 h-4 rounded-full transition-colors relative ${
+                spicyMode ? "bg-hearts-red/40" : "bg-cream/15"
+              }`}
+            >
+              <motion.div
+                layout
+                className="absolute top-0.5 w-3 h-3 rounded-full bg-cream shadow-sm"
+                animate={{ left: spicyMode ? 14 : 2 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            </div>
+          </button>
+        )}
       </div>
 
       <motion.h1
@@ -179,12 +278,19 @@ export default function MrAndMrsPage() {
       </motion.h1>
 
       {phase !== "end" && phase !== "loading" && (
-        <ScoreTracker
-          round={round}
-          totalRounds={TOTAL_ROUNDS}
-          score={score}
-          maxScore={TOTAL_ROUNDS}
-        />
+        <>
+          <ScoreTracker
+            round={round}
+            totalRounds={TOTAL_ROUNDS}
+            score={score}
+            maxScore={TOTAL_ROUNDS}
+          />
+          {/* Debug: current spicy mode + question spicy flag */}
+          <p className="font-body text-cream/30 text-[10px] mt-1">
+            Mode: {spicyMode ? "spicy" : "clean"}
+            {currentQuestion && ` | Question: ${currentQuestion.spicy ? "spicy" : "clean"}`}
+          </p>
+        </>
       )}
 
       <div className="flex-1 flex items-center justify-center w-full mt-4">
@@ -212,6 +318,14 @@ export default function MrAndMrsPage() {
             </motion.div>
           )}
 
+          {phase === "pass-to-p1" && playerNames && (
+            <PassPhone
+              key="pass-p1"
+              playerName={playerNames.player1}
+              onReady={() => setPhase("p1-answer")}
+            />
+          )}
+
           {phase === "p1-answer" && currentQuestion && playerNames && (
             <motion.div
               key={`p1-${round}`}
@@ -225,7 +339,7 @@ export default function MrAndMrsPage() {
                   {playerNames.player1}, answer honestly:
                 </p>
                 <p className="font-display text-cream text-lg leading-relaxed">
-                  {currentQuestion}
+                  {currentQuestion.question}
                 </p>
               </div>
 
@@ -269,7 +383,7 @@ export default function MrAndMrsPage() {
                   {playerNames.player2}, your turn:
                 </p>
                 <p className="font-display text-cream text-lg leading-relaxed">
-                  {currentQuestion}
+                  {currentQuestion.question}
                 </p>
               </div>
 
@@ -295,7 +409,7 @@ export default function MrAndMrsPage() {
           {phase === "reveal" && currentQuestion && playerNames && p1Answer && p2Answer && (
             <RevealResult
               key={`reveal-${round}`}
-              question={currentQuestion}
+              question={currentQuestion.question}
               player1Name={playerNames.player1}
               player2Name={playerNames.player2}
               player1Answer={p1Answer}
