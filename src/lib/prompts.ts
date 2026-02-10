@@ -117,18 +117,22 @@ Good examples:
 - "have a rewind button for your life (but you can only use it once)" / "a pause button you can use whenever you want"
 - "live twice as long at half the intensity" / "half as long at double the intensity"`,
 
-        cursed: `CURSED category. Both options are horrible. Physical cringe, gross, or deeply uncomfortable. The reaction should be an immediate "oh NO" followed by agonised deliberation. Many of these involve body horror, embarrassment, or disgusting sensory experiences.
+        cursed: `CURSED category. Both options are horrible. The reaction should be an immediate "oh NO" followed by agonised deliberation.
+
+IMPORTANT: Cursed questions are NOT silly body-modification hypotheticals like "would you rather sweat maple syrup" or "have fingers for legs". Those are Silly. Cursed means both options make you physically cringe, squirm, or feel deeply uncomfortable. Think: gross sensory experiences with real things (licking a pub floor, sharing a toothbrush), excruciating social embarrassment (your parents seeing your search history, your nudes being leaked), or horrible real-world choices (your partner reads your group chat, everyone you've slept with is in one room). The test: if someone laughs immediately, it's Silly. If someone grimaces and says "oh god, neither", it's Cursed.
 
 Good examples:
 - "walk in on your parents" / "have your parents walk in on you"
 - "lick the floor of a pub bathroom" / "drink a shot of a stranger's bathwater"
 - "sit through a detailed PowerPoint of your parents' sex life" / "have them sit through one of yours"
-- "your farts are always silent but visible (like a green cloud)" / "invisible but sound like a foghorn"
 - "every chair you sit on is slightly warm (as if someone just got up)" / "every drink you're handed has a single hair floating in it"
 - "share a toothbrush with a stranger for a year" / "wear the same underwear for a month"
 - "bite into every apple and find half a worm" / "feel something brush against your foot in every body of water you enter"
 - "have a counter above your head showing how many people in the room have seen you naked" / "have your Spotify listening history displayed above your head at all times"
-- "eat a bowl of toenail clippings" / "drink a glass of someone else's sweat"`,
+- "eat a bowl of toenail clippings" / "drink a glass of someone else's sweat"
+- "your partner reads your entire group chat history" / "your boss reads your entire search history"
+
+Bad examples (these are Silly, NOT Cursed): "sweat maple syrup", "have fingers for legs", "sneeze confetti", "your tears are hot sauce"`,
 
         shuffle: `SHUFFLE mode. Return a mix of questions with roughly equal distribution across three categories: silly, deep, and cursed. Tag each item with its category.
 

@@ -31,9 +31,19 @@ export interface GenerateRequest {
   exclude?: string[];
 }
 
+export type WyrCategory = 'silly' | 'deep' | 'cursed' | 'shuffle';
+
+export const WYR_CATEGORIES: { value: WyrCategory; label: string }[] = [
+  { value: 'silly', label: '🤪 Silly' },
+  { value: 'deep', label: '🧠 Deep' },
+  { value: 'cursed', label: '💀 Cursed' },
+  { value: 'shuffle', label: '🔀 Shuffle' },
+];
+
 export interface WouldYouRatherDilemma {
   optionA: string;
   optionB: string;
+  category: 'silly' | 'deep' | 'cursed';
 }
 
 export interface PlayerNames {

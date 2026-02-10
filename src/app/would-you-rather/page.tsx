@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useGame } from "@/context/GameContext";
@@ -10,12 +10,13 @@ import RevealResult from "@/components/RevealResult";
 import ScoreTracker from "@/components/ScoreTracker";
 import EndScreen from "@/components/EndScreen";
 import LoadingState from "@/components/LoadingState";
-import { WouldYouRatherDilemma } from "@/lib/types";
+import { WouldYouRatherDilemma, WyrCategory, WYR_CATEGORIES } from "@/lib/types";
 import { vibrate } from "@/lib/haptics";
 
 type Phase =
   | "names"
   | "loading"
+  | "pass-to-p1"
   | "p1-answer"
   | "pass-to-p2"
   | "p2-answer"
@@ -25,15 +26,16 @@ type Phase =
 const TOTAL_ROUNDS = 10;
 
 const TIERS = [
-  { minScore: 9, message: "Soulmates!", emoji: "💕" },
-  { minScore: 7, message: "You know each other well!", emoji: "😍" },
-  { minScore: 5, message: "Getting there!", emoji: "💛" },
-  { minScore: 0, message: "Lots to discover!", emoji: "🌱" },
+  { minScore: 9, message: "Scarily compatible!", emoji: "💕" },
+  { minScore: 7, message: "Cut from the same cloth!", emoji: "😍" },
+  { minScore: 5, message: "Some common ground!", emoji: "💛" },
+  { minScore: 0, message: "Opposites attract!", emoji: "🌱" },
 ];
 
 export default function WouldYouRatherPage() {
   const { playerNames } = useGame();
   const [phase, setPhase] = useState<Phase>(playerNames ? "loading" : "names");
+  const [category, setCategory] = useState<WyrCategory>("shuffle");
   const [dilemmas, setDilemmas] = useState<WouldYouRatherDilemma[]>([]);
   const [usedDilemmas, setUsedDilemmas] = useState<string[]>([]);
   const [round, setRound] = useState(1);
@@ -41,35 +43,78 @@ export default function WouldYouRatherPage() {
   const [p1Answer, setP1Answer] = useState<string | null>(null);
   const [p2Answer, setP2Answer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const recentCategories = useRef<string[]>([]);
 
   const currentDilemma = dilemmas[0];
 
-  const fetchDilemmas = useCallback(async (exclude: string[]) => {
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+  const fetchDilemmas = useCallback(
+    async (cat: WyrCategory, exclude: string[]) => {
+      const requestBody = {
         game: "would-you-rather",
+        category: cat,
         count: 10,
         exclude,
-      }),
-    });
-    if (!res.ok) throw new Error("Failed to fetch");
-    const data = await res.json();
-    return data.items as WouldYouRatherDilemma[];
-  }, []);
+      };
+      console.log("[WYR] Fetching dilemmas:", requestBody);
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      console.log("[WYR] Received dilemmas:", data.items?.map((d: WouldYouRatherDilemma) => d.category));
+      return data.items as WouldYouRatherDilemma[];
+    },
+    []
+  );
 
-  const loadDilemmas = useCallback(async () => {
-    setPhase("loading");
-    setError(null);
-    try {
-      const items = await fetchDilemmas(usedDilemmas);
-      setDilemmas(items);
-      setPhase("p1-answer");
-    } catch {
-      setError("Shuffling the deck... try again!");
+  // For shuffle mode: reorder so no more than 2 from same category in a row
+  const enforceShuffleOrder = (items: WouldYouRatherDilemma[]): WouldYouRatherDilemma[] => {
+    if (items.length <= 1) return items;
+    const result: WouldYouRatherDilemma[] = [];
+    const remaining = [...items];
+
+    for (let i = 0; i < items.length; i++) {
+      const recentTwo = [
+        ...(i === 0 ? recentCategories.current.slice(-2) : []),
+        ...result.slice(-2).map((d) => d.category),
+      ].slice(-2);
+
+      const allSame = recentTwo.length === 2 && recentTwo[0] === recentTwo[1];
+
+      let picked = -1;
+      if (allSame) {
+        picked = remaining.findIndex((d) => d.category !== recentTwo[0]);
+      }
+      if (picked === -1) picked = 0;
+
+      result.push(remaining[picked]);
+      remaining.splice(picked, 1);
     }
-  }, [fetchDilemmas, usedDilemmas]);
+
+    return result;
+  };
+
+  const loadDilemmas = useCallback(
+    async (cat?: WyrCategory) => {
+      const targetCat = cat || category;
+      setPhase("loading");
+      setError(null);
+      try {
+        let items = await fetchDilemmas(targetCat, usedDilemmas);
+        if (targetCat === "shuffle") {
+          items = enforceShuffleOrder(items);
+        }
+        setDilemmas(items);
+        setPhase("pass-to-p1");
+      } catch {
+        setError("Shuffling the deck... try again!");
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fetchDilemmas, usedDilemmas, category]
+  );
 
   useEffect(() => {
     if (phase === "loading" && playerNames) {
@@ -80,6 +125,23 @@ export default function WouldYouRatherPage() {
 
   const handleStart = () => {
     loadDilemmas();
+  };
+
+  const handleCategoryChange = (newCat: WyrCategory) => {
+    vibrate(20);
+    setCategory(newCat);
+    console.log("[WYR] Category changed to:", newCat);
+    // Don't touch the current dilemmas list — the category change
+    // takes effect on the NEXT question (handled in handleNext).
+    // Background-fetch for the new category so items are ready.
+    if (newCat !== "shuffle") {
+      const hasEnough = dilemmas.filter((d) => d.category === newCat).length >= 3;
+      if (!hasEnough) {
+        fetchDilemmas(newCat, usedDilemmas).then((items) => {
+          setDilemmas((prev) => [...prev, ...items]);
+        });
+      }
+    }
   };
 
   const handleP1Answer = (answer: string) => {
@@ -96,6 +158,24 @@ export default function WouldYouRatherPage() {
     setPhase("reveal");
   };
 
+  const getNextDilemma = (remaining: WouldYouRatherDilemma[]): WouldYouRatherDilemma[] => {
+    if (category !== "shuffle" || remaining.length <= 1) return remaining;
+
+    const recentTwo = recentCategories.current.slice(-2);
+    const allSame = recentTwo.length === 2 && recentTwo[0] === recentTwo[1];
+
+    if (allSame && remaining[0]?.category === recentTwo[0]) {
+      const swapIdx = remaining.findIndex((d) => d.category !== recentTwo[0]);
+      if (swapIdx > 0) {
+        const reordered = [...remaining];
+        const [swapped] = reordered.splice(swapIdx, 1);
+        reordered.unshift(swapped);
+        return reordered;
+      }
+    }
+    return remaining;
+  };
+
   const handleNext = () => {
     setP1Answer(null);
     setP2Answer(null);
@@ -103,24 +183,61 @@ export default function WouldYouRatherPage() {
     const dilemmaStr = currentDilemma
       ? `${currentDilemma.optionA} or ${currentDilemma.optionB}`
       : "";
-    const remaining = dilemmas.slice(1);
-    setUsedDilemmas((prev) => [...prev, dilemmaStr]);
-    setDilemmas(remaining);
+
+    if (currentDilemma) {
+      recentCategories.current = [
+        ...recentCategories.current.slice(-3),
+        currentDilemma.category,
+      ];
+    }
+
+    let remaining = dilemmas.slice(1);
+    // For non-shuffle, filter to current category
+    if (category !== "shuffle") {
+      remaining = remaining.filter((d) => d.category === category);
+    }
+    remaining = getNextDilemma(remaining);
+
+    const newUsed = [...usedDilemmas, dilemmaStr];
+    setUsedDilemmas(newUsed);
 
     if (round >= TOTAL_ROUNDS) {
+      setDilemmas(remaining);
       setPhase("end");
       return;
     }
 
     setRound((r) => r + 1);
 
+    // If no items left for the selected category, fetch immediately
+    if (remaining.length === 0) {
+      setDilemmas([]);
+      setPhase("loading");
+      setError(null);
+      fetchDilemmas(category, newUsed)
+        .then((items) => {
+          if (category === "shuffle") {
+            items = enforceShuffleOrder(items);
+          }
+          setDilemmas(items);
+          setPhase("pass-to-p1");
+        })
+        .catch(() => {
+          setError("Shuffling the deck... try again!");
+        });
+      return;
+    }
+
+    setDilemmas(remaining);
+
+    // Background refetch if running low
     if (remaining.length < 3) {
-      fetchDilemmas([...usedDilemmas, dilemmaStr]).then((items) => {
+      fetchDilemmas(category, newUsed).then((items) => {
         setDilemmas((prev) => [...prev, ...items]);
       });
     }
 
-    setPhase("p1-answer");
+    setPhase("pass-to-p1");
   };
 
   const handlePlayAgain = () => {
@@ -129,6 +246,7 @@ export default function WouldYouRatherPage() {
     setP1Answer(null);
     setP2Answer(null);
     setUsedDilemmas([]);
+    recentCategories.current = [];
     loadDilemmas();
   };
 
@@ -156,6 +274,20 @@ export default function WouldYouRatherPage() {
     );
   }
 
+  const showCategoryTabs =
+    phase === "pass-to-p1" ||
+    phase === "p1-answer" ||
+    phase === "pass-to-p2" ||
+    phase === "p2-answer" ||
+    phase === "reveal";
+
+  // Debug label showing the actual category of the current question
+  const debugCategoryLabel = currentDilemma
+    ? category === "shuffle"
+      ? `Shuffle (${currentDilemma.category})`
+      : currentDilemma.category
+    : null;
+
   return (
     <div className="min-h-[100dvh] flex flex-col items-center px-5 py-6 safe-top safe-bottom">
       {/* Header */}
@@ -171,18 +303,45 @@ export default function WouldYouRatherPage() {
       <motion.h1
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-display text-2xl font-bold text-gold mb-4"
+        className="font-display text-2xl font-bold text-gold mb-3"
       >
         Would You Rather
       </motion.h1>
 
+      {/* Category tabs */}
+      {showCategoryTabs && (
+        <div className="flex gap-1.5 mb-3 w-full max-w-sm">
+          {WYR_CATEGORIES.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => handleCategoryChange(cat.value)}
+              className={`relative flex-1 py-2 rounded-lg font-body text-xs font-medium transition-colors min-h-[36px] ${
+                category === cat.value
+                  ? "bg-gold/20 border border-gold/30 text-gold"
+                  : "bg-burgundy-dark/50 border border-gold/10 text-cream/40"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {phase !== "end" && phase !== "loading" && (
-        <ScoreTracker
-          round={round}
-          totalRounds={TOTAL_ROUNDS}
-          score={score}
-          maxScore={TOTAL_ROUNDS}
-        />
+        <>
+          <ScoreTracker
+            round={round}
+            totalRounds={TOTAL_ROUNDS}
+            score={score}
+            maxScore={TOTAL_ROUNDS}
+          />
+          {/* Debug: current question category */}
+          {debugCategoryLabel && (
+            <p className="font-body text-cream/30 text-[10px] mt-1">
+              Category: {debugCategoryLabel}
+            </p>
+          )}
+        </>
       )}
 
       <div className="flex-1 flex items-center justify-center w-full mt-4">
@@ -198,7 +357,7 @@ export default function WouldYouRatherPage() {
                 <div className="text-center">
                   <p className="font-body text-cream/60 text-sm mb-3">{error}</p>
                   <button
-                    onClick={loadDilemmas}
+                    onClick={() => loadDilemmas()}
                     className="font-body text-gold text-sm underline"
                   >
                     Try Again
@@ -210,6 +369,14 @@ export default function WouldYouRatherPage() {
             </motion.div>
           )}
 
+          {phase === "pass-to-p1" && playerNames && (
+            <PassPhone
+              key="pass-p1"
+              playerName={playerNames.player1}
+              onReady={() => setPhase("p1-answer")}
+            />
+          )}
+
           {phase === "p1-answer" && currentDilemma && playerNames && (
             <motion.div
               key={`p1-${round}`}
@@ -219,7 +386,7 @@ export default function WouldYouRatherPage() {
               className="w-full max-w-sm"
             >
               <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-5 mb-4">
-                <p className="font-body text-cream/50 text-xs mb-3">
+                <p className="font-body text-cream/50 text-xs mb-1">
                   {playerNames.player1}, would you rather...
                 </p>
               </div>
@@ -233,7 +400,7 @@ export default function WouldYouRatherPage() {
                   {currentDilemma.optionA}
                 </motion.button>
                 <p className="font-display text-gold/40 text-xs text-center">
-                  — or —
+                  or
                 </p>
                 <motion.button
                   whileTap={{ scale: 0.97 }}
@@ -263,7 +430,7 @@ export default function WouldYouRatherPage() {
               className="w-full max-w-sm"
             >
               <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-5 mb-4">
-                <p className="font-body text-cream/50 text-xs mb-3">
+                <p className="font-body text-cream/50 text-xs mb-1">
                   {playerNames.player2}, would you rather...
                 </p>
               </div>
@@ -277,7 +444,7 @@ export default function WouldYouRatherPage() {
                   {currentDilemma.optionA}
                 </motion.button>
                 <p className="font-display text-gold/40 text-xs text-center">
-                  — or —
+                  or
                 </p>
                 <motion.button
                   whileTap={{ scale: 0.97 }}

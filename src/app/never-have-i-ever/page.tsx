@@ -215,6 +215,9 @@ export default function NeverHaveIEverPage() {
               className="w-full max-w-sm"
             >
               <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-6 mb-5 relative">
+                <p className="font-body text-cream/50 text-sm text-center mb-2">
+                  Never have I ever...
+                </p>
                 <p className="font-display text-cream text-lg leading-relaxed text-center">
                   {currentStatement}
                 </p>
