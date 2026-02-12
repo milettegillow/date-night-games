@@ -12,60 +12,60 @@ export function getSystemPrompt(): string {
 
 const WHEEL_VARIANTS: Record<string, string[]> = {
   "Funny Stories": [
-    "Focus on childhood, school, and growing-up stories.",
-    "Focus on work, professional life, and career mishaps.",
-    "Focus on travel, holidays, and trips abroad.",
-    "Focus on nights out, parties, and social disasters.",
-    "Focus on family gatherings and sibling-related stories.",
+    "Mix of childhood, work, travel, nights out, and family stories.",
+    "Lean toward cringe moments, misunderstandings, and things that went wrong.",
+    "Lean toward stories involving other people: strangers, friends, or authority figures.",
+    "Lean toward stories with an unexpected twist or surprise ending.",
+    "Lean toward stories about being caught, exposed, or publicly embarrassed.",
   ],
   "Big Questions": [
-    "Focus on identity, personality, and self-perception.",
-    "Focus on ambitions, careers, and the future.",
-    "Focus on values, ethics, and moral grey areas.",
-    "Focus on turning points, pivotal decisions, and alternate timelines.",
-    "Focus on society, culture, and generational differences.",
+    "Mix of identity, ambition, ethics, turning points, and society.",
+    "Lean toward questions about alternate timelines and roads not taken.",
+    "Lean toward questions about beliefs, values, and what you stand for.",
+    "Lean toward questions about self-knowledge and personal blind spots.",
+    "Lean toward questions about the future and what comes next.",
   ],
   "Guilty Pleasures": [
-    "Focus on entertainment: music, TV, film, and internet habits.",
-    "Focus on food, drink, and indulgent routines.",
-    "Focus on social media, apps, and technology habits.",
-    "Focus on fashion, appearance, and vanity-related pleasures.",
-    "Focus on nostalgia, childhood comforts, and throwbacks.",
+    "Mix of entertainment, food, social media, vanity, and nostalgia.",
+    "Lean toward secret habits nobody knows about.",
+    "Lean toward things you enjoy but are slightly ashamed of.",
+    "Lean toward comforts, routines, and indulgent rituals.",
+    "Lean toward throwbacks, childhood favourites, and retro obsessions.",
   ],
   "Hot Takes": [
-    "Focus on social norms, etiquette, and modern culture.",
-    "Focus on food, drink, and dining opinions.",
-    "Focus on relationships, friendships, and social dynamics.",
-    "Focus on work culture, productivity, and career norms.",
-    "Focus on popular media, trends, and entertainment.",
+    "Mix of social norms, food opinions, relationships, work culture, and media.",
+    "Lean toward takes that would start a genuine argument.",
+    "Lean toward controversial opinions about everyday life.",
+    "Lean toward takes about modern culture that most people disagree on.",
+    "Lean toward unpopular opinions about popular things.",
   ],
   "Fears & Peeves": [
-    "Focus on irrational fears and phobias.",
-    "Focus on social irritations and etiquette violations.",
-    "Focus on workplace and professional annoyances.",
-    "Focus on technology, modern life, and daily frustrations.",
-    "Focus on relationship and friendship pet peeves.",
+    "Mix of phobias, social irritations, workplace annoyances, tech frustrations, and relationship pet peeves.",
+    "Lean toward irrational fears that are hard to explain.",
+    "Lean toward small everyday annoyances that drive you mad.",
+    "Lean toward things other people do that are secretly infuriating.",
+    "Lean toward anxieties about the future or modern life.",
   ],
   "Confessions": [
-    "Focus on petty behaviour, grudges, and secret competitiveness.",
-    "Focus on lies, deception, and getting away with things.",
-    "Focus on hidden skills, hobbies, and double lives.",
-    "Focus on regrets, unresolved guilt, and things left unsaid.",
-    "Focus on youthful rebellion and things you did growing up.",
+    "Mix of petty behaviour, lies, hidden talents, regrets, and youthful rebellion.",
+    "Lean toward things you've never told anyone.",
+    "Lean toward things you got away with and never confessed.",
+    "Lean toward petty grudges and secret competitiveness.",
+    "Lean toward embarrassing truths about your habits or personality.",
   ],
   "Situationships": [
-    "Focus on dating disasters, bad dates, and cringe moments.",
-    "Focus on red flags, dealbreakers, and dating opinions.",
-    "Focus on exes, breakups, and post-breakup behaviour.",
-    "Focus on modern dating culture, apps, and trends.",
-    "Focus on crush stories, missed connections, and awkward encounters.",
+    "Mix of dating disasters, red flags, exes, modern dating, and crush stories.",
+    "Lean toward cringe moments and awkward encounters.",
+    "Lean toward stories about misread signals and miscommunication.",
+    "Lean toward opinions about modern dating culture.",
+    "Lean toward the most unhinged dating behaviour you've witnessed.",
   ],
   "Wild Card": [
-    "Focus on hypothetical scenarios and what-if questions.",
-    "Focus on unusual life experiences and rare events.",
-    "Focus on money, spending, and financial decisions.",
-    "Focus on life-or-death scenarios and extreme hypotheticals.",
-    "Focus on secrets, hidden knowledge, and conspiracy-style questions.",
+    "Mix of hypotheticals, unusual experiences, money, extreme scenarios, and secrets.",
+    "Lean toward bizarre what-if questions with no easy answer.",
+    "Lean toward questions that reveal something unexpected about someone.",
+    "Lean toward thought experiments about human nature.",
+    "Lean toward questions that are impossible to answer the same way twice.",
   ],
 };
 
@@ -145,24 +145,22 @@ const WYR_VARIANTS: Record<string, string[]> = {
 // A random seed phrase is appended to each call to nudge the output in unpredictable directions.
 
 const SEED_PHRASES = [
-  "Think about scenarios involving technology and the internet.",
-  "Include at least one question referencing food or drink.",
-  "Lean into travel and different-countries themes where possible.",
-  "Think about scenarios from someone's teenage years or early twenties.",
-  "Include something related to money, spending, or financial decisions.",
-  "Think about workplace and professional life scenarios.",
-  "Include something about music, concerts, or festivals.",
-  "Lean into friendship dynamics and group situations.",
-  "Think about scenarios involving strangers or people you've just met.",
-  "Include something related to social media or online behaviour.",
-  "Think about family dynamics and home life.",
-  "Lean into night-time, late-night, or after-dark scenarios.",
-  "Include something about competition, winning, or losing.",
-  "Think about scenarios involving animals or nature.",
-  "Include something related to holidays, celebrations, or traditions.",
-  "Think about scenarios involving cars, transport, or road trips.",
-  "Lean into questions that reference specific decades or eras.",
-  "Include something about exercise, sports, or physical challenges.",
+  "Make one item unexpectedly specific or niche.",
+  "Make one item about a scenario most people have secretly experienced.",
+  "Make one item that would be especially fun to answer at 2am.",
+  "Make one item that would divide a room 50/50.",
+  "Make one item with a surprising or counterintuitive angle.",
+  "Make one item that triggers a very specific memory.",
+  "Make one item that sounds simple but is actually hard to answer.",
+  "Make one item that would make someone pause before answering.",
+  "Make one item about something people rarely talk about openly.",
+  "Make one item that gets funnier the more you think about it.",
+  "Make one item that reveals something unexpected about someone.",
+  "Make one item with high storytelling potential.",
+  "Make one item that people would immediately want to discuss.",
+  "Make one item about a universal experience seen from an unusual angle.",
+  "Make one item that would get a strong reaction from most people.",
+  "Make one item that taps into a very specific life stage or era.",
 ];
 
 function pickRandom<T>(arr: T[]): T {
@@ -297,9 +295,10 @@ Good examples:
 ${catInstructions}
 
 THEMATIC DIRECTION FOR THIS BATCH: ${variant}
-CREATIVE SEED: ${seed}
+CREATIVE SEED (apply to at most 1 item, not the whole batch): ${seed}
 
 RULES (follow these strictly):
+- The ${count} items must cover a wide range of different subjects. NEVER have two items about the same topic, theme, or subject area. Diversity is critical.
 - Never use emdashes. Use parentheses if clarification is needed.
 - Never reference "your partner", "your date", "your relationship", "together", "as a couple", or anything that assumes romance.
 - Questions should be addressed to "you" (singular), not "you two" or "both of you".
@@ -345,7 +344,7 @@ Spicy questions should make people squirm slightly before answering. A mix of se
 ${spicyInstructions}
 
 THEMATIC DIRECTION FOR THIS BATCH: ${mmVariant}
-CREATIVE SEED: ${mmSeed}
+CREATIVE SEED (apply to at most 1 item, not the whole batch): ${mmSeed}
 
 Good standard examples:
 - "Who is more likely to survive a zombie apocalypse?"
@@ -377,6 +376,7 @@ Bad examples (do NOT generate questions like these):
 - "Who is more likely to say I love you first?" (assumes romantic relationship)
 
 RULES (follow these strictly):
+- The ${count} items must cover a wide range of different subjects. NEVER have two items about the same topic, theme, or subject area. Diversity is critical.
 - Never use emdashes. Use parentheses if clarification is needed.
 - Questions must work as "[Name] or [Name]" answers.
 - Questions should work equally well for friends, new couples, or long-term couples. Never assume anything about the relationship.
@@ -427,9 +427,10 @@ Bad examples (these belong in Medium, not Spicy): "had a one-night stand", "kiss
 ${spiceInstructions[nhieLevel]}
 
 THEMATIC DIRECTION FOR THIS BATCH: ${nhieVariant}
-CREATIVE SEED: ${nhieSeed}
+CREATIVE SEED (apply to at most 1 item, not the whole batch): ${nhieSeed}
 
 RULES (follow these strictly):
+- The ${count} items must cover a wide range of different subjects. NEVER have two items about the same topic, theme, or subject area. Diversity is critical.
 - Every statement must be a single, specific thing. NEVER combine two things with "or".
 - Never use emdashes. Use parentheses if clarification is needed.
 - Statements must be specific enough to trigger a story. If someone has done it, they should immediately remember when and where. Vague, mundane things that everyone has done are bad.
@@ -507,9 +508,10 @@ Refer to these descriptions:
 ${wyrCategoryInstructions[wyrCategory]}
 
 THEMATIC DIRECTION FOR THIS BATCH: ${wyrVariant}
-CREATIVE SEED: ${wyrSeed}
+CREATIVE SEED (apply to at most 1 item, not the whole batch): ${wyrSeed}
 
 RULES (follow these strictly):
+- The ${count} items must cover a wide range of different subjects. NEVER have two items about the same topic, theme, or subject area. Diversity is critical.
 - Never use emdashes. Use parentheses if clarification is needed.
 - Both options must be genuinely hard to choose between. If one option is obviously better, the question fails.
 - Keep options concise. Each option should ideally be under 15 words.

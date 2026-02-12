@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-const suits = ["♥", "♠", "♦", "♣"];
+const suits = ["♣", "♦", "♥", "♠"];
 
 export default function LoadingState({ message = "Shuffling the deck..." }: { message?: string }) {
   return (

@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0B1A0F;
-  --foreground: #FFF8F0;
-  --felt: #1B5E32;
-  --felt-dark: #0B1A0F;
-  --felt-light: #2E7D46;
-  --cream: #FFF8F0;
-  --gold: #D4A845;
-  --gold-light: #E8C97A;
-  --silver: #A8B2B8;
-  --casino-red: #C41E3A;
+  --background: #0b1a0f;
+  --foreground: #fff8f0;
+  --felt: #1b5e32;
+  --felt-dark: #0b1a0f;
+  --felt-light: #2e7d46;
+  --cream: #fff8f0;
+  --gold: #d4a845;
+  --gold-light: #e8c97a;
+  --silver: #a8b2b8;
+  --casino-red: #c41e3a;
 }
 
 @theme inline {
@@ -48,19 +48,26 @@ body {
 }
 
 /* Prevent iOS text zoom on input focus */
-input, select, textarea {
+input,
+select,
+textarea {
   font-size: 16px;
 }
 
 /* Prevent double-tap zoom on buttons */
-button, a {
+button,
+a {
   touch-action: manipulation;
 }
 
 /* Gold shimmer animation */
 @keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
 }
 
 .gold-shimmer {

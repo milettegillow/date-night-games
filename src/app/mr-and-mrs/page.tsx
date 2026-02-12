@@ -62,7 +62,7 @@ export default function MrAndMrsPage() {
       const data = await res.json();
       return data.items as MrAndMrsQuestion[];
     },
-    []
+    [],
   );
 
   const loadQuestions = useCallback(async () => {
@@ -95,7 +95,10 @@ export default function MrAndMrsPage() {
     if (matchingCount < 3) {
       console.log("[M&M] Not enough matching questions, fetching...");
       fetchQuestions(usedQuestions, newSpicy).then((items) => {
-        console.log("[M&M] Fetched batch:", items.map((q) => ({ q: q.question.slice(0, 40), spicy: q.spicy })));
+        console.log(
+          "[M&M] Fetched batch:",
+          items.map((q) => ({ q: q.question.slice(0, 40), spicy: q.spicy })),
+        );
         setQuestions((prev) => [...prev, ...items]);
       });
     }
@@ -175,7 +178,10 @@ export default function MrAndMrsPage() {
 
   if (phase === "names") {
     return (
-      <div className="min-h-[100dvh] flex flex-col items-center px-5 pt-10 pb-6">
+      <div
+        className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
+        style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top, 0px))' }}
+      >
         <div className="w-full max-w-sm mb-4">
           <Link
             href="/"
@@ -185,23 +191,28 @@ export default function MrAndMrsPage() {
           </Link>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm">
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="font-display text-2xl font-bold text-gold mb-2"
-          >
-            Mr & Mrs
-          </motion.h1>
+        <motion.h1
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="font-display font-bold text-gold leading-tight mb-4"
+          style={{ fontSize: 'clamp(2.25rem, 11vw, 3rem)' }}
+        >
+          Mr & Mrs
+        </motion.h1>
+
+        <div className="flex-1 flex flex-col items-center justify-start w-full max-w-sm">
           <p className="font-body text-cream/50 text-xs text-center mb-6 max-w-xs">
-            How well do you know each other? Answer separately — you score a
-            point when you agree!
+            How well do you know each other? Answer separately (you score a
+            point when you agree!)
           </p>
 
           {/* Spicy toggle on intro screen */}
           <div className="w-full mb-6">
             <button
-              onClick={() => { vibrate(20); setSpicyMode((s) => !s); }}
+              onClick={() => {
+                vibrate(20);
+                setSpicyMode((s) => !s);
+              }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-cream/5 border border-gold/15 transition-colors"
             >
               <span className="font-body text-cream/70 text-sm">
@@ -239,7 +250,7 @@ export default function MrAndMrsPage() {
   return (
     <div
       className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
-      style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top, 0px))' }}
+      style={{ paddingTop: "max(2.5rem, env(safe-area-inset-top, 0px))" }}
     >
       {/* Header */}
       <div className="w-full max-w-sm mb-4 flex items-center justify-between">
@@ -280,7 +291,8 @@ export default function MrAndMrsPage() {
       <motion.h1
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-display text-2xl font-bold text-gold mb-4"
+        className="font-display font-bold text-gold leading-tight mb-4"
+        style={{ fontSize: 'clamp(2.25rem, 11vw, 3rem)' }}
       >
         Mr & Mrs
       </motion.h1>
@@ -296,7 +308,8 @@ export default function MrAndMrsPage() {
           {/* Debug: current spicy mode + question spicy flag */}
           <p className="font-body text-cream/30 text-[10px] mt-1">
             Mode: {spicyMode ? "spicy" : "clean"}
-            {currentQuestion && ` | Question: ${currentQuestion.spicy ? "spicy" : "clean"}`}
+            {currentQuestion &&
+              ` | Question: ${currentQuestion.spicy ? "spicy" : "clean"}`}
           </p>
         </>
       )}
@@ -312,7 +325,9 @@ export default function MrAndMrsPage() {
             >
               {error ? (
                 <div className="text-center">
-                  <p className="font-body text-cream/60 text-sm mb-3">{error}</p>
+                  <p className="font-body text-cream/60 text-sm mb-3">
+                    {error}
+                  </p>
                   <button
                     onClick={loadQuestions}
                     className="font-body text-gold text-sm underline"
@@ -414,18 +429,22 @@ export default function MrAndMrsPage() {
             </motion.div>
           )}
 
-          {phase === "reveal" && currentQuestion && playerNames && p1Answer && p2Answer && (
-            <RevealResult
-              key={`reveal-${round}`}
-              question={currentQuestion.question}
-              player1Name={playerNames.player1}
-              player2Name={playerNames.player2}
-              player1Answer={p1Answer}
-              player2Answer={p2Answer}
-              matched={p1Answer === p2Answer}
-              onNext={handleNext}
-            />
-          )}
+          {phase === "reveal" &&
+            currentQuestion &&
+            playerNames &&
+            p1Answer &&
+            p2Answer && (
+              <RevealResult
+                key={`reveal-${round}`}
+                question={currentQuestion.question}
+                player1Name={playerNames.player1}
+                player2Name={playerNames.player2}
+                player1Answer={p1Answer}
+                player2Answer={p2Answer}
+                matched={p1Answer === p2Answer}
+                onNext={handleNext}
+              />
+            )}
 
           {phase === "end" && (
             <EndScreen

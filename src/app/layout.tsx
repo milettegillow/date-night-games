@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   title: "Date Night Games",
   description: "Conversation run dry? Shuffle the deck.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/qh-favicon.png",
+    apple: "/qh-favicon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

@@ -12,8 +12,8 @@ const SEGMENT_COLORS = [
   "#C41E3A",  // Guilty Pleasures — red
   "#1A1A1A",  // Hot Takes — black
   "#C41E3A",  // Fears & Peeves — red
-  "#1A1A1A",  // Confessions — black
-  "#C41E3A",  // Situationships — red
+  "#1A1A1A",  // Situationships — black
+  "#C41E3A",  // Confessions — red
   "#1B5E32",  // Wild Card — green (the "0")
 ];
 
@@ -34,7 +34,7 @@ const WHEEL_LINES: Record<WheelCategory, string[]> = {
   "Big Questions": ["Big", "Questions"],
   "Guilty Pleasures": ["Guilty", "Pleasures"],
   "Hot Takes": ["Hot", "Takes"],
-  "Fears & Peeves": ["Fears &", "Peeves"],
+  "Fears & Peeves": ["Fears & Pet", "Peeves"],
   "Confessions": ["Confessions"],
   "Situationships": ["Situation-", "ships"],
   "Wild Card": ["Wild", "Card"],
@@ -116,7 +116,10 @@ export default function SpinWheel({ onCategorySelected, disabled }: SpinWheelPro
   }
 
   return (
-    <div className="relative flex items-center justify-center">
+    <div
+      className="relative flex items-center justify-center"
+      style={{ width: "min(85vw, 40vh, 350px)", aspectRatio: "1" }}
+    >
       {/* Pointer at top */}
       <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-10">
         <div
@@ -133,6 +136,7 @@ export default function SpinWheel({ onCategorySelected, disabled }: SpinWheelPro
       {/* Wheel */}
       <div
         ref={wheelRef}
+        className="w-full h-full"
         style={{
           transform: `rotate(${rotation}deg)`,
           transition: isSpinning
@@ -140,7 +144,7 @@ export default function SpinWheel({ onCategorySelected, disabled }: SpinWheelPro
             : "none",
         }}
       >
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`}>
           {/* Outer wooden rail ring */}
           <circle
             cx={center}

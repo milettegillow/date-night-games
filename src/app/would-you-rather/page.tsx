@@ -245,7 +245,10 @@ export default function WouldYouRatherPage() {
 
   if (phase === "names") {
     return (
-      <div className="min-h-[100dvh] flex flex-col items-center px-5 pt-10 pb-6">
+      <div
+        className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
+        style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top, 0px))' }}
+      >
         <div className="w-full max-w-sm mb-4">
           <Link
             href="/"
@@ -255,14 +258,16 @@ export default function WouldYouRatherPage() {
           </Link>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm">
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="font-display text-2xl font-bold text-gold mb-2"
-          >
-            Would You Rather
-          </motion.h1>
+        <motion.h1
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="font-display font-bold text-gold leading-tight mb-4"
+          style={{ fontSize: 'clamp(2.25rem, 11vw, 3rem)' }}
+        >
+          Would You Rather
+        </motion.h1>
+
+        <div className="flex-1 flex flex-col items-center justify-start pt-4 w-full max-w-sm">
           <p className="font-body text-cream/50 text-xs text-center mb-4 max-w-xs">
             Do you think alike? Pick the same answer to score!
           </p>
@@ -322,7 +327,8 @@ export default function WouldYouRatherPage() {
       <motion.h1
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-display text-2xl font-bold text-gold mb-3"
+        className="font-display font-bold text-gold leading-tight mb-3"
+        style={{ fontSize: 'clamp(2.25rem, 11vw, 3rem)' }}
       >
         Would You Rather
       </motion.h1>

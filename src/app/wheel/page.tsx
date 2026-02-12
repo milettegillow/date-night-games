@@ -8,7 +8,9 @@ import LoadingState from "@/components/LoadingState";
 import { WheelCategory, WHEEL_EMOJIS } from "@/lib/types";
 
 export default function WheelPage() {
-  const [currentCategory, setCurrentCategory] = useState<WheelCategory | null>(null);
+  const [currentCategory, setCurrentCategory] = useState<WheelCategory | null>(
+    null,
+  );
   const [currentTopic, setCurrentTopic] = useState<string | null>(null);
   const [topicPools, setTopicPools] = useState<Record<string, string[]>>({});
   const [usedTopics, setUsedTopics] = useState<string[]>([]);
@@ -33,7 +35,7 @@ export default function WheelPage() {
       const data = await res.json();
       return data.items as string[];
     },
-    []
+    [],
   );
 
   const getTopicFromPool = useCallback(
@@ -74,7 +76,7 @@ export default function WheelPage() {
         setIsLoading(false);
       }
     },
-    [topicPools, usedTopics, fetchTopics]
+    [topicPools, usedTopics, fetchTopics],
   );
 
   const handleCategorySelected = useCallback(
@@ -83,7 +85,7 @@ export default function WheelPage() {
       setShowTopic(false);
       getTopicFromPool(category);
     },
-    [getTopicFromPool]
+    [getTopicFromPool],
   );
 
   const handleNextTopic = () => {
@@ -102,25 +104,23 @@ export default function WheelPage() {
   return (
     <div
       className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
-      style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top, 0px))' }}
+      style={{ paddingTop: "max(2.5rem, env(safe-area-inset-top, 0px))" }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between w-full max-w-sm mb-4">
+      <div className="w-full max-w-sm mb-4">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
         >
           ← Back
         </Link>
-        <span className="font-body text-cream/40 text-xs">
-          Topics Explored: {topicsExplored}
-        </span>
       </div>
 
       <motion.h1
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-display text-2xl font-bold text-gold mb-6"
+        className="font-display font-bold text-gold leading-tight mb-4"
+        style={{ fontSize: "clamp(1.75rem, 8.5vw, 2.5rem)" }}
       >
         Conversation Wheel
       </motion.h1>
@@ -131,8 +131,8 @@ export default function WheelPage() {
         disabled={isLoading}
       />
 
-      {/* Topic display area */}
-      <div className="mt-6 w-full max-w-sm min-h-[160px] flex items-center justify-center">
+      {/* Topic display area — fills remaining space */}
+      <div className="mt-4 w-full max-w-sm flex-1 flex items-start justify-center">
         <AnimatePresence mode="wait">
           {isLoading && (
             <motion.div
@@ -155,7 +155,9 @@ export default function WheelPage() {
             >
               <p className="font-body text-cream/60 text-sm mb-3">{error}</p>
               <button
-                onClick={() => currentCategory && getTopicFromPool(currentCategory)}
+                onClick={() =>
+                  currentCategory && getTopicFromPool(currentCategory)
+                }
                 className="font-body text-gold text-sm underline"
               >
                 Try Again
@@ -175,7 +177,8 @@ export default function WheelPage() {
             >
               <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-5">
                 <p className="font-body text-gold/60 text-xs uppercase tracking-wider mb-2">
-                  {currentCategory && WHEEL_EMOJIS[currentCategory]} {currentCategory}
+                  {currentCategory && WHEEL_EMOJIS[currentCategory]}{" "}
+                  {currentCategory}
                 </p>
                 <p className="font-display text-cream text-lg leading-relaxed">
                   {currentTopic}

@@ -18,8 +18,8 @@ export const WHEEL_CATEGORIES: WheelCategory[] = [
   'Guilty Pleasures',
   'Hot Takes',
   'Fears & Peeves',
-  'Confessions',
   'Situationships',
+  'Confessions',
   'Wild Card',
 ];
 

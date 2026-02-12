@@ -11,12 +11,18 @@ export default function Home() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="text-center mb-8"
+        className="text-center mb-10 w-full max-w-sm"
       >
-        <h1 className="font-display text-4xl font-bold gold-shimmer mb-2">
+        <h1
+          className="font-display font-bold gold-shimmer leading-tight mb-1"
+          style={{ fontSize: "clamp(2.25rem, 11vw, 3rem)" }}
+        >
           Date Night Games
         </h1>
-        <p className="font-body text-cream/60 text-sm">
+        <p
+          className="font-body text-cream/60"
+          style={{ fontSize: "clamp(0.875rem, 4vw, 1.25rem)" }}
+        >
           Conversation run dry? Shuffle the deck.
         </p>
       </motion.div>
