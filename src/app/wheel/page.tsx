@@ -6,6 +6,7 @@ import Link from "next/link";
 import SpinWheel from "@/components/SpinWheel";
 import LoadingState from "@/components/LoadingState";
 import { WheelCategory, WHEEL_EMOJIS } from "@/lib/types";
+import posthog from "posthog-js";
 
 export default function WheelPage() {
   const [currentCategory, setCurrentCategory] = useState<WheelCategory | null>(
@@ -70,7 +71,8 @@ export default function WheelPage() {
             }));
           });
         }
-      } catch {
+      } catch (err) {
+        posthog.capture("api_error", { game: "wheel", error: String(err) });
         setError("Shuffling the deck... try again!");
       } finally {
         setIsLoading(false);
@@ -81,6 +83,7 @@ export default function WheelPage() {
 
   const handleCategorySelected = useCallback(
     (category: WheelCategory) => {
+      posthog.capture("wheel_spin", { category });
       setCurrentCategory(category);
       setShowTopic(false);
       getTopicFromPool(category);
@@ -90,12 +93,14 @@ export default function WheelPage() {
 
   const handleNextTopic = () => {
     if (currentCategory) {
+      posthog.capture("wheel_next_topic");
       setShowTopic(false);
       setTimeout(() => getTopicFromPool(currentCategory), 300);
     }
   };
 
   const handleSpinAgain = () => {
+    posthog.capture("wheel_spin_again");
     setShowTopic(false);
     setCurrentTopic(null);
     setCurrentCategory(null);

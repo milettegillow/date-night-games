@@ -12,6 +12,7 @@ import EndScreen from "@/components/EndScreen";
 import LoadingState from "@/components/LoadingState";
 import { MrAndMrsQuestion } from "@/lib/types";
 import { vibrate } from "@/lib/haptics";
+import posthog from "posthog-js";
 
 type Phase =
   | "names"
@@ -72,12 +73,14 @@ export default function MrAndMrsPage() {
       const items = await fetchQuestions(usedQuestions, spicyMode);
       setQuestions(items);
       setPhase("pass-to-p1");
-    } catch {
+    } catch (err) {
+      posthog.capture("api_error", { game: "mr-and-mrs", error: String(err) });
       setError("Shuffling the deck... try again!");
     }
   }, [fetchQuestions, usedQuestions, spicyMode]);
 
   const handleStart = () => {
+    posthog.capture("mrsmrs_game_start", { spicy: spicyMode });
     loadQuestions();
   };
 
@@ -115,6 +118,7 @@ export default function MrAndMrsPage() {
     setP2Answer(answer);
     const matched = answer === p1Answer;
     if (matched) setScore((s) => s + 1);
+    posthog.capture("mrsmrs_round_complete", { round, matched, spicy: currentQuestion?.spicy ?? spicyMode });
     setPhase("reveal");
   };
 
@@ -130,6 +134,7 @@ export default function MrAndMrsPage() {
     remaining = remaining.filter((q) => q.spicy === spicyMode);
 
     if (round >= TOTAL_ROUNDS) {
+      posthog.capture("mrsmrs_game_complete", { score, spicy: spicyMode });
       setQuestions(remaining);
       setPhase("end");
       return;
@@ -149,7 +154,8 @@ export default function MrAndMrsPage() {
           setQuestions(items);
           setPhase("pass-to-p1");
         })
-        .catch(() => {
+        .catch((err) => {
+          posthog.capture("api_error", { game: "mr-and-mrs", error: String(err) });
           setError("Shuffling the deck... try again!");
         });
       return;

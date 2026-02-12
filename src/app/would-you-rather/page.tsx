@@ -12,6 +12,7 @@ import EndScreen from "@/components/EndScreen";
 import LoadingState from "@/components/LoadingState";
 import { WouldYouRatherDilemma, WyrCategory, WYR_CATEGORIES } from "@/lib/types";
 import { vibrate } from "@/lib/haptics";
+import posthog from "posthog-js";
 
 type Phase =
   | "names"
@@ -108,7 +109,8 @@ export default function WouldYouRatherPage() {
         }
         setDilemmas(items);
         setPhase("pass-to-p1");
-      } catch {
+      } catch (err) {
+        posthog.capture("api_error", { game: "would-you-rather", error: String(err) });
         setError("Shuffling the deck... try again!");
       }
     },
@@ -117,11 +119,13 @@ export default function WouldYouRatherPage() {
   );
 
   const handleStart = () => {
+    posthog.capture("wyr_game_start", { category });
     loadDilemmas();
   };
 
   const handleCategoryChange = (newCat: WyrCategory) => {
     vibrate(20);
+    posthog.capture("wyr_category_switch", { from: category, to: newCat });
     setCategory(newCat);
     console.log("[WYR] Category changed to:", newCat);
     // Don't touch the current dilemmas list — the category change
@@ -148,6 +152,7 @@ export default function WouldYouRatherPage() {
     setP2Answer(answer);
     const matched = answer === p1Answer;
     if (matched) setScore((s) => s + 1);
+    posthog.capture("wyr_round_complete", { round, matched, category: currentDilemma?.category ?? category });
     setPhase("reveal");
   };
 
@@ -195,6 +200,7 @@ export default function WouldYouRatherPage() {
     setUsedDilemmas(newUsed);
 
     if (round >= TOTAL_ROUNDS) {
+      posthog.capture("wyr_game_complete", { score, category });
       setDilemmas(remaining);
       setPhase("end");
       return;
@@ -215,7 +221,8 @@ export default function WouldYouRatherPage() {
           setDilemmas(items);
           setPhase("pass-to-p1");
         })
-        .catch(() => {
+        .catch((err) => {
+          posthog.capture("api_error", { game: "would-you-rather", error: String(err) });
           setError("Shuffling the deck... try again!");
         });
       return;

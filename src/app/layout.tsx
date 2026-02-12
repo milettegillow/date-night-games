@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Serif_Display, Inter } from "next/font/google";
+import { DM_Serif_Display, Josefin_Sans } from "next/font/google";
 import { GameProvider } from "@/context/GameContext";
+import PostHogProvider from "@/components/PostHogProvider";
 import "./globals.css";
 
 const dmSerif = DM_Serif_Display({
@@ -10,8 +11,8 @@ const dmSerif = DM_Serif_Display({
   display: "swap",
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const josefinSans = Josefin_Sans({
+  variable: "--font-josefin",
   subsets: ["latin"],
   display: "swap",
 });
@@ -50,8 +51,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${dmSerif.variable} ${inter.variable} antialiased`}>
-        <GameProvider>{children}</GameProvider>
+      <body className={`${dmSerif.variable} ${josefinSans.variable} antialiased`}>
+        <PostHogProvider>
+          <GameProvider>{children}</GameProvider>
+        </PostHogProvider>
       </body>
     </html>
   );

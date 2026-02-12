@@ -9,6 +9,7 @@ import EndScreen from "@/components/EndScreen";
 import LoadingState from "@/components/LoadingState";
 import { SpiceLevel } from "@/lib/types";
 import { vibrate } from "@/lib/haptics";
+import posthog from "posthog-js";
 
 type Phase = "intro" | "loading" | "statement" | "end";
 
@@ -60,13 +61,15 @@ export default function NeverHaveIEverPage() {
   );
 
   const startGame = useCallback(async () => {
+    posthog.capture("nhie_game_start", { spiceLevel });
     setPhase("loading");
     setError(null);
     try {
       const items = await fetchStatements(spiceLevel, []);
       setStatements(items);
       setPhase("statement");
-    } catch {
+    } catch (err) {
+      posthog.capture("api_error", { game: "never-have-i-ever", error: String(err) });
       setError("Shuffling the deck... try again!");
     }
   }, [fetchStatements, spiceLevel]);
@@ -75,6 +78,7 @@ export default function NeverHaveIEverPage() {
     vibrate(30);
     setScore((s) => s + points);
     setPointsAdded(points);
+    posthog.capture("nhie_round_complete", { round, answer: points, spiceLevel });
 
     // Show points briefly, then advance
     setTimeout(() => {
@@ -85,6 +89,7 @@ export default function NeverHaveIEverPage() {
       setStatements(remaining);
 
       if (round >= TOTAL_ROUNDS) {
+        posthog.capture("nhie_game_complete", { score: score + points, spiceLevel });
         setPhase("end");
         return;
       }

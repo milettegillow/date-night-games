@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import posthog from "posthog-js";
 
 type Suit = "hearts" | "spades" | "diamonds" | "clubs";
 
@@ -43,7 +44,7 @@ export default function GameCard({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, delay, ease: "easeOut" }}
     >
-      <Link href={href} className="block">
+      <Link href={href} className="block" onClick={() => posthog.capture("game_selected", { game: href.replace("/", "") })}>
         <motion.div
           whileHover={{ scale: 1.03, rotateY: 3, rotateX: -2 }}
           whileTap={{ scale: 0.97 }}

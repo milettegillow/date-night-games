@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 :root {
+  font-size: 17px;
   --background: #0b1a0f;
   --foreground: #fff8f0;
   --felt: #1b5e32;
-  --felt-dark: #0b1a0f;
+  --felt-dark: #112a1b;
   --felt-light: #2e7d46;
   --cream: #fff8f0;
   --gold: #d4a845;
@@ -25,7 +26,7 @@
   --color-silver: var(--silver);
   --color-casino-red: var(--casino-red);
   --font-display: var(--font-dm-serif);
-  --font-body: var(--font-inter);
+  --font-body: var(--font-josefin);
 }
 
 body {
