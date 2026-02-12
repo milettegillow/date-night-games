@@ -31,8 +31,12 @@ async function hogql(query: string): Promise<{ results: unknown[][] }> {
 export async function GET() {
   if (!POSTHOG_API_KEY || !POSTHOG_PROJECT_ID) {
     return NextResponse.json(
-      { error: "PostHog not configured" },
-      { status: 503 }
+      {
+        error: "Missing environment variables",
+        hasPosthogKey: !!POSTHOG_API_KEY,
+        hasProjectId: !!POSTHOG_PROJECT_ID,
+      },
+      { status: 500 }
     );
   }
 
@@ -138,7 +142,13 @@ export async function GET() {
   } catch (error) {
     console.error("Stats API error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch stats" },
+      {
+        error: "Stats fetch failed",
+        message: error instanceof Error ? error.message : "Unknown error",
+        hasPosthogKey: !!POSTHOG_API_KEY,
+        hasProjectId: !!POSTHOG_PROJECT_ID,
+        projectId: POSTHOG_PROJECT_ID,
+      },
       { status: 500 }
     );
   }
