@@ -4,8 +4,8 @@
   "description": "Shuffle the deck. Spark the conversation.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1A0A12",
-  "theme_color": "#2D0A1B",
+  "background_color": "#0B1A0F",
+  "theme_color": "#1B5E32",
   "orientation": "portrait",
   "icons": [
     {

@@ -1,35 +1,35 @@
 @import "tailwindcss";
 
 :root {
-  --background: #1A0A12;
+  --background: #0B1A0F;
   --foreground: #FFF8F0;
-  --burgundy: #2D0A1B;
-  --burgundy-dark: #1A0A12;
-  --burgundy-light: #4A1A2E;
+  --felt: #1B5E32;
+  --felt-dark: #0B1A0F;
+  --felt-light: #2E7D46;
   --cream: #FFF8F0;
   --gold: #D4A845;
   --gold-light: #E8C97A;
-  --rose-gold: #B76E79;
-  --hearts-red: #C41E3A;
+  --silver: #A8B2B8;
+  --casino-red: #C41E3A;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-burgundy: var(--burgundy);
-  --color-burgundy-dark: var(--burgundy-dark);
-  --color-burgundy-light: var(--burgundy-light);
+  --color-felt: var(--felt);
+  --color-felt-dark: var(--felt-dark);
+  --color-felt-light: var(--felt-light);
   --color-cream: var(--cream);
   --color-gold: var(--gold);
   --color-gold-light: var(--gold-light);
-  --color-rose-gold: var(--rose-gold);
-  --color-hearts-red: var(--hearts-red);
-  --font-display: var(--font-playfair);
+  --color-silver: var(--silver);
+  --color-casino-red: var(--casino-red);
+  --font-display: var(--font-dm-serif);
   --font-body: var(--font-inter);
 }
 
 body {
-  background: linear-gradient(180deg, var(--burgundy) 0%, var(--burgundy-dark) 100%);
+  background: linear-gradient(180deg, var(--felt) 0%, var(--felt-dark) 100%);
   color: var(--foreground);
   font-family: var(--font-body, sans-serif);
   min-height: 100dvh;
@@ -92,11 +92,11 @@ button, a {
   backface-visibility: hidden;
 }
 
-/* Subtle kiss mark background pattern */
-.kiss-pattern {
+/* Subtle casino table felt pattern */
+.table-pattern {
   background-image: radial-gradient(
     ellipse at 50% 50%,
-    rgba(196, 30, 58, 0.03) 0%,
+    rgba(46, 125, 70, 0.05) 0%,
     transparent 70%
   );
   background-size: 80px 80px;

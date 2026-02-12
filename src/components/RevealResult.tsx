@@ -54,7 +54,7 @@ export default function RevealResult({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className={`font-body text-sm ${matched ? "text-gold" : "text-rose-gold"}`}
+            className={`font-body text-sm ${matched ? "text-gold" : "text-silver"}`}
           >
             {matched ? matchMessage : mismatchMessage}
           </motion.p>
@@ -81,7 +81,7 @@ export default function RevealResult({
             <p className="font-body text-cream/40 text-xs mb-1">
               {player1Name}
             </p>
-            <div className="bg-burgundy-light/50 rounded-lg py-2 px-3">
+            <div className="bg-felt-light/50 rounded-lg py-2 px-3">
               <p className="font-display text-cream text-sm font-semibold">
                 {player1Answer}
               </p>
@@ -91,7 +91,7 @@ export default function RevealResult({
             <p className="font-body text-cream/40 text-xs mb-1">
               {player2Name}
             </p>
-            <div className="bg-burgundy-light/50 rounded-lg py-2 px-3">
+            <div className="bg-felt-light/50 rounded-lg py-2 px-3">
               <p className="font-display text-cream text-sm font-semibold">
                 {player2Answer}
               </p>

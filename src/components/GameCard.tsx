@@ -13,10 +13,10 @@ const suitSymbols: Record<Suit, string> = {
 };
 
 const suitColors: Record<Suit, string> = {
-  hearts: "text-hearts-red",
-  spades: "text-burgundy-dark",
-  diamonds: "text-hearts-red",
-  clubs: "text-burgundy-dark",
+  hearts: "text-casino-red",
+  spades: "text-felt-dark",
+  diamonds: "text-casino-red",
+  clubs: "text-felt-dark",
 };
 
 interface GameCardProps {
@@ -67,10 +67,10 @@ export default function GameCard({
             </span>
 
             {/* Card content */}
-            <h3 className="font-display text-xl text-burgundy-dark font-bold text-center leading-tight mb-1">
+            <h3 className="font-display text-xl text-felt-dark font-bold text-center leading-tight mb-1">
               {title}
             </h3>
-            <p className="font-body text-xs text-burgundy-light text-center leading-snug px-2">
+            <p className="font-body text-xs text-felt-light text-center leading-snug px-2">
               {subtitle}
             </p>
           </div>

@@ -47,7 +47,7 @@ export default function NameEntry({ onStart }: NameEntryProps) {
               value={name1}
               onChange={(e) => setName1(e.target.value)}
               placeholder="Enter name..."
-              className="w-full bg-burgundy-dark/50 border border-gold/20 rounded-lg px-4 py-3 font-body text-cream text-base placeholder:text-cream/30 focus:outline-none focus:border-gold/50 transition-colors"
+              className="w-full bg-felt-dark/50 border border-gold/20 rounded-lg px-4 py-3 font-body text-cream text-base placeholder:text-cream/30 focus:outline-none focus:border-gold/50 transition-colors"
               maxLength={20}
               autoFocus
             />
@@ -62,7 +62,7 @@ export default function NameEntry({ onStart }: NameEntryProps) {
               value={name2}
               onChange={(e) => setName2(e.target.value)}
               placeholder="Enter name..."
-              className="w-full bg-burgundy-dark/50 border border-gold/20 rounded-lg px-4 py-3 font-body text-cream text-base placeholder:text-cream/30 focus:outline-none focus:border-gold/50 transition-colors"
+              className="w-full bg-felt-dark/50 border border-gold/20 rounded-lg px-4 py-3 font-body text-cream text-base placeholder:text-cream/30 focus:outline-none focus:border-gold/50 transition-colors"
               maxLength={20}
             />
           </div>
@@ -71,7 +71,7 @@ export default function NameEntry({ onStart }: NameEntryProps) {
             whileTap={{ scale: 0.97 }}
             type="submit"
             disabled={!name1.trim() || !name2.trim()}
-            className="mt-2 py-3 rounded-lg bg-gold text-burgundy-dark font-display text-base font-bold tracking-wide disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
+            className="mt-2 py-3 rounded-lg bg-gold text-felt-dark font-display text-base font-bold tracking-wide disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
           >
             Let&apos;s Play
           </motion.button>

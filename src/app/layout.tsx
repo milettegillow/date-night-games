@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { DM_Serif_Display, Inter } from "next/font/google";
 import { GameProvider } from "@/context/GameContext";
 import "./globals.css";
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const dmSerif = DM_Serif_Display({
+  variable: "--font-dm-serif",
   subsets: ["latin"],
+  weight: "400",
   display: "swap",
 });
 
@@ -17,7 +18,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Date Night Games",
-  description: "Shuffle the deck. Spark the conversation.",
+  description: "Conversation run dry? Shuffle the deck.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Date Night Games",
-    description: "Shuffle the deck. Spark the conversation.",
+    description: "Conversation run dry? Shuffle the deck.",
     type: "website",
   },
 };
@@ -45,9 +46,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${playfair.variable} ${inter.variable} antialiased`}
-      >
+      <body className={`${dmSerif.variable} ${inter.variable} antialiased`}>
         <GameProvider>{children}</GameProvider>
       </body>
     </html>

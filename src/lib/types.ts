@@ -3,25 +3,36 @@ export type GameId = 'wheel' | 'mr-and-mrs' | 'never-have-i-ever' | 'would-you-r
 export type SpiceLevel = 'mild' | 'medium' | 'spicy';
 
 export type WheelCategory =
-  | 'Dreams & Future'
   | 'Funny Stories'
-  | 'Deep Questions'
-  | 'Travel'
+  | 'Big Questions'
   | 'Guilty Pleasures'
-  | 'Hypotheticals'
-  | 'Memory Lane'
-  | 'Spicy 🌶️';
+  | 'Hot Takes'
+  | 'Fears & Peeves'
+  | 'Confessions'
+  | 'Situationships'
+  | 'Wild Card';
 
 export const WHEEL_CATEGORIES: WheelCategory[] = [
-  'Dreams & Future',
   'Funny Stories',
-  'Deep Questions',
-  'Travel',
+  'Big Questions',
   'Guilty Pleasures',
-  'Hypotheticals',
-  'Memory Lane',
-  'Spicy 🌶️',
+  'Hot Takes',
+  'Fears & Peeves',
+  'Confessions',
+  'Situationships',
+  'Wild Card',
 ];
+
+export const WHEEL_EMOJIS: Record<WheelCategory, string> = {
+  'Funny Stories': '😂',
+  'Big Questions': '🧠',
+  'Guilty Pleasures': '🫣',
+  'Hot Takes': '🔥',
+  'Fears & Peeves': '😱',
+  'Confessions': '🤫',
+  'Situationships': '💋',
+  'Wild Card': '🃏',
+};
 
 export interface GenerateRequest {
   game: GameId;

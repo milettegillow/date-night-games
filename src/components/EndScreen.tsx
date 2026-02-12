@@ -78,7 +78,7 @@ export default function EndScreen({
                 }}
                 className="absolute left-1/2 text-xl"
               >
-                ❤️
+                {["♠️", "♥️", "♦️", "♣️", "🎰", "💰"][i]}
               </motion.span>
             ))}
           </div>

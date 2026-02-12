@@ -112,51 +112,58 @@ export default function NeverHaveIEverPage() {
 
   if (phase === "intro") {
     return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center px-5 py-6">
-        <Link
-          href="/"
-          className="font-body text-cream/60 text-sm mb-6 self-start hover:text-cream transition-colors"
-        >
-          ← Back
-        </Link>
-
-        <motion.h1
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="font-display text-2xl font-bold text-gold mb-2"
-        >
-          Never Have I Ever
-        </motion.h1>
-        <p className="font-body text-cream/50 text-xs text-center mb-6 max-w-xs">
-          How adventurous are you as a couple? Score points for every experience
-          you&apos;ve shared (or not!)
-        </p>
-
-        <div className="w-full max-w-sm mb-6">
-          <p className="font-body text-cream/40 text-xs text-center mb-3">
-            Choose your spice level
-          </p>
-          <SpiceToggle value={spiceLevel} onChange={setSpiceLevel} />
+      <div className="min-h-[100dvh] flex flex-col items-center px-5 pt-10 pb-6">
+        <div className="w-full max-w-sm mb-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
+          >
+            ← Back
+          </Link>
         </div>
 
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={startGame}
-          className="px-8 py-3 rounded-lg bg-gold text-burgundy-dark font-display text-base font-bold tracking-wide min-h-[48px]"
-        >
-          Start Game
-        </motion.button>
+        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm">
+          <motion.h1
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="font-display text-2xl font-bold text-gold mb-2"
+          >
+            Never Have I Ever
+          </motion.h1>
+          <p className="font-body text-cream/50 text-xs text-center mb-6 max-w-xs">
+            How adventurous are you as a couple? Score points for every experience
+            you&apos;ve shared (or not!)
+          </p>
+
+          <div className="w-full mb-6">
+            <p className="font-body text-cream/40 text-xs text-center mb-3">
+              Choose your spice level
+            </p>
+            <SpiceToggle value={spiceLevel} onChange={setSpiceLevel} />
+          </div>
+
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={startGame}
+            className="px-8 py-3 rounded-lg bg-gold text-felt-dark font-display text-base font-bold tracking-wide min-h-[48px]"
+          >
+            Start Game
+          </motion.button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center px-5 py-6 safe-top safe-bottom">
+    <div
+      className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
+      style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top, 0px))' }}
+    >
       {/* Header */}
       <div className="w-full max-w-sm mb-4">
         <Link
           href="/"
-          className="font-body text-cream/60 text-sm hover:text-cream transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
         >
           ← Back
         </Link>
@@ -244,7 +251,7 @@ export default function NeverHaveIEverPage() {
                     whileTap={{ scale: 0.97 }}
                     onClick={() => handleAnswer(opt.points)}
                     disabled={pointsAdded !== null}
-                    className="py-4 rounded-lg bg-burgundy-light/50 border border-gold/15 text-cream font-body text-sm font-medium min-h-[52px] disabled:opacity-50 transition-opacity"
+                    className="py-4 rounded-lg bg-felt-light/50 border border-gold/15 text-cream font-body text-sm font-medium min-h-[52px] disabled:opacity-50 transition-opacity"
                   >
                     {opt.label}
                   </motion.button>

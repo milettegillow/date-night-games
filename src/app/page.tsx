@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 export default function Home() {
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center px-5 py-8 safe-top safe-bottom kiss-pattern">
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center px-5 py-8 safe-top safe-bottom table-pattern">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -17,7 +17,7 @@ export default function Home() {
           Date Night Games
         </h1>
         <p className="font-body text-cream/60 text-sm">
-          Shuffle the deck. Spark the conversation.
+          Conversation run dry? Shuffle the deck.
         </p>
       </motion.div>
 
@@ -26,9 +26,17 @@ export default function Home() {
         <GameCard
           title="Conversation Wheel"
           subtitle="Spin for a topic to talk about"
-          suit="diamonds"
+          suit="clubs"
           href="/wheel"
           delay={0.1}
+        />
+
+        <GameCard
+          title="Never Have I Ever"
+          subtitle="How adventurous are you?"
+          suit="diamonds"
+          href="/never-have-i-ever"
+          delay={0.3}
         />
         <GameCard
           title="Mr & Mrs"
@@ -36,13 +44,6 @@ export default function Home() {
           suit="hearts"
           href="/mr-and-mrs"
           delay={0.2}
-        />
-        <GameCard
-          title="Never Have I Ever"
-          subtitle="How adventurous are you?"
-          suit="clubs"
-          href="/never-have-i-ever"
-          delay={0.3}
         />
         <GameCard
           title="Would You Rather"

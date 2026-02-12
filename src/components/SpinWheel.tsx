@@ -2,30 +2,43 @@
 
 import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { WHEEL_CATEGORIES, WheelCategory } from "@/lib/types";
+import { WHEEL_CATEGORIES, WHEEL_EMOJIS, WheelCategory } from "@/lib/types";
 import { vibrate } from "@/lib/haptics";
 
+// Roulette-style: alternating red/black, Wild Card in green
 const SEGMENT_COLORS = [
-  "#2D0A1B",
-  "#FFF8F0",
-  "#B76E79",
-  "#2D0A1B",
-  "#FFF8F0",
-  "#B76E79",
-  "#2D0A1B",
-  "#FFF8F0",
+  "#C41E3A",  // Funny Stories — red
+  "#1A1A1A",  // Big Questions — black
+  "#C41E3A",  // Guilty Pleasures — red
+  "#1A1A1A",  // Hot Takes — black
+  "#C41E3A",  // Fears & Peeves — red
+  "#1A1A1A",  // Confessions — black
+  "#C41E3A",  // Situationships — red
+  "#1B5E32",  // Wild Card — green (the "0")
 ];
 
 const SEGMENT_TEXT_COLORS = [
   "#FFF8F0",
-  "#2D0A1B",
   "#FFF8F0",
   "#FFF8F0",
-  "#2D0A1B",
   "#FFF8F0",
   "#FFF8F0",
-  "#2D0A1B",
+  "#FFF8F0",
+  "#FFF8F0",
+  "#FFF8F0",
 ];
+
+// Full labels split into lines for the wheel
+const WHEEL_LINES: Record<WheelCategory, string[]> = {
+  "Funny Stories": ["Funny", "Stories"],
+  "Big Questions": ["Big", "Questions"],
+  "Guilty Pleasures": ["Guilty", "Pleasures"],
+  "Hot Takes": ["Hot", "Takes"],
+  "Fears & Peeves": ["Fears &", "Peeves"],
+  "Confessions": ["Confessions"],
+  "Situationships": ["Situation-", "ships"],
+  "Wild Card": ["Wild", "Card"],
+};
 
 interface SpinWheelProps {
   onCategorySelected: (category: WheelCategory) => void;
@@ -45,8 +58,8 @@ export default function SpinWheel({ onCategorySelected, disabled }: SpinWheelPro
     vibrate(50);
     setIsSpinning(true);
 
-    // Random 3-5 full rotations + random offset
-    const fullRotations = (3 + Math.random() * 2) * 360;
+    // Integer full rotations (3-5) for visual satisfaction + uniform random landing
+    const fullRotations = (3 + Math.floor(Math.random() * 3)) * 360;
     const randomOffset = Math.random() * 360;
     const newRotation = rotation + fullRotations + randomOffset;
 
@@ -55,8 +68,16 @@ export default function SpinWheel({ onCategorySelected, disabled }: SpinWheelPro
     // Determine which category the pointer lands on after spin
     setTimeout(() => {
       const normalizedAngle = newRotation % 360;
-      const pointerAngle = (360 - normalizedAngle + segmentAngle / 2) % 360;
+      const pointerAngle = (360 - normalizedAngle) % 360;
       const index = Math.floor(pointerAngle / segmentAngle) % WHEEL_CATEGORIES.length;
+
+      console.log("[Wheel] Spin result:", {
+        totalRotation: newRotation.toFixed(1),
+        mod360: normalizedAngle.toFixed(1),
+        pointerAngle: pointerAngle.toFixed(1),
+        segmentIndex: index,
+        category: WHEEL_CATEGORIES[index],
+      });
 
       setIsSpinning(false);
       vibrate([50, 30, 50]);
@@ -83,10 +104,10 @@ export default function SpinWheel({ onCategorySelected, disabled }: SpinWheelPro
     return `M ${center} ${center} L ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y} Z`;
   }
 
-  function getTextPosition(index: number) {
+  function getTextPosition(index: number, radiusMultiplier: number) {
     const angle = index * segmentAngle + segmentAngle / 2 - 90;
     const rad = (angle * Math.PI) / 180;
-    const textRadius = radius * 0.62;
+    const textRadius = radius * radiusMultiplier;
     return {
       x: center + textRadius * Math.cos(rad),
       y: center + textRadius * Math.sin(rad),
@@ -120,13 +141,23 @@ export default function SpinWheel({ onCategorySelected, disabled }: SpinWheelPro
         }}
       >
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {/* Outer wooden rail ring */}
+          <circle
+            cx={center}
+            cy={center}
+            r={radius + 4}
+            fill="none"
+            stroke="#8B6914"
+            strokeWidth="4"
+          />
+          {/* Inner gold ring */}
           <circle
             cx={center}
             cy={center}
             r={radius + 2}
             fill="none"
             stroke="#D4A845"
-            strokeWidth="3"
+            strokeWidth="2"
           />
           {WHEEL_CATEGORIES.map((category, i) => {
             const startAngle = i * segmentAngle;
@@ -142,26 +173,68 @@ export default function SpinWheel({ onCategorySelected, disabled }: SpinWheelPro
             );
           })}
           {WHEEL_CATEGORIES.map((category, i) => {
-            const pos = getTextPosition(i);
-            const label =
-              category.length > 14 ? category.slice(0, 12) + "…" : category;
+            const lines = WHEEL_LINES[category];
+            const emojiPos = getTextPosition(i, 0.85);
+
+            // For single-line labels, place at 0.62
+            // For two-line labels, place lines at 0.64 and 0.56 (tighter spacing)
+            const linePositions = lines.length === 1
+              ? [getTextPosition(i, 0.62)]
+              : [getTextPosition(i, 0.64), getTextPosition(i, 0.56)];
+
             return (
-              <text
-                key={category}
-                x={pos.x}
-                y={pos.y}
-                fill={SEGMENT_TEXT_COLORS[i]}
-                fontSize="10"
-                fontWeight="600"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                transform={`rotate(${pos.rotation}, ${pos.x}, ${pos.y})`}
-              >
-                {label}
-              </text>
+              <g key={category}>
+                {/* Emoji */}
+                <text
+                  x={emojiPos.x}
+                  y={emojiPos.y}
+                  fontSize="13"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  transform={`rotate(${emojiPos.rotation}, ${emojiPos.x}, ${emojiPos.y})`}
+                >
+                  {WHEEL_EMOJIS[category]}
+                </text>
+                {/* Label lines */}
+                {lines.map((line, li) => {
+                  const pos = linePositions[li];
+                  return (
+                    <text
+                      key={li}
+                      x={pos.x}
+                      y={pos.y}
+                      fill={SEGMENT_TEXT_COLORS[i]}
+                      fontSize="9"
+                      fontWeight="600"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      transform={`rotate(${pos.rotation}, ${pos.x}, ${pos.y})`}
+                    >
+                      {line}
+                    </text>
+                  );
+                })}
+              </g>
             );
           })}
-          <circle cx={center} cy={center} r="35" fill="#1A0A12" stroke="#D4A845" strokeWidth="2" />
+          {/* Roulette ball pocket dots at segment boundaries */}
+          {WHEEL_CATEGORIES.map((_, i) => {
+            const angle = i * segmentAngle - 90;
+            const rad = (angle * Math.PI) / 180;
+            const dotR = radius - 2;
+            return (
+              <circle
+                key={`dot-${i}`}
+                cx={center + dotR * Math.cos(rad)}
+                cy={center + dotR * Math.sin(rad)}
+                r="3"
+                fill="#D4A845"
+                opacity="0.6"
+              />
+            );
+          })}
+          {/* Center hub */}
+          <circle cx={center} cy={center} r="30" fill="#0B1A0F" stroke="#D4A845" strokeWidth="2" />
         </svg>
       </div>
 

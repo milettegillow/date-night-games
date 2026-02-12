@@ -175,50 +175,55 @@ export default function MrAndMrsPage() {
 
   if (phase === "names") {
     return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center px-5 py-6">
-        <Link
-          href="/"
-          className="font-body text-cream/60 text-sm mb-6 self-start hover:text-cream transition-colors"
-        >
-          ← Back
-        </Link>
-        <motion.h1
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="font-display text-2xl font-bold text-gold mb-2"
-        >
-          Mr & Mrs
-        </motion.h1>
-        <p className="font-body text-cream/50 text-xs text-center mb-6 max-w-xs">
-          How well do you know each other? Answer separately — you score a
-          point when you agree!
-        </p>
-
-        {/* Spicy toggle on intro screen */}
-        <div className="w-full max-w-sm mb-6">
-          <button
-            onClick={() => { vibrate(20); setSpicyMode((s) => !s); }}
-            className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-cream/5 border border-gold/15 transition-colors"
+      <div className="min-h-[100dvh] flex flex-col items-center px-5 pt-10 pb-6">
+        <div className="w-full max-w-sm mb-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
           >
-            <span className="font-body text-cream/70 text-sm">
-              {spicyMode ? "🌶️ Spicy" : "😇 Keep it clean"}
-            </span>
-            <div
-              className={`w-11 h-6 rounded-full transition-colors relative ${
-                spicyMode ? "bg-hearts-red/60" : "bg-cream/20"
-              }`}
-            >
-              <motion.div
-                layout
-                className="absolute top-0.5 w-5 h-5 rounded-full bg-cream shadow-sm"
-                animate={{ left: spicyMode ? 22 : 2 }}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              />
-            </div>
-          </button>
+            ← Back
+          </Link>
         </div>
 
-        <NameEntry onStart={handleStart} />
+        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm">
+          <motion.h1
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="font-display text-2xl font-bold text-gold mb-2"
+          >
+            Mr & Mrs
+          </motion.h1>
+          <p className="font-body text-cream/50 text-xs text-center mb-6 max-w-xs">
+            How well do you know each other? Answer separately — you score a
+            point when you agree!
+          </p>
+
+          {/* Spicy toggle on intro screen */}
+          <div className="w-full mb-6">
+            <button
+              onClick={() => { vibrate(20); setSpicyMode((s) => !s); }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-cream/5 border border-gold/15 transition-colors"
+            >
+              <span className="font-body text-cream/70 text-sm">
+                {spicyMode ? "🌶️ Spicy" : "😇 Keep it clean"}
+              </span>
+              <div
+                className={`w-11 h-6 rounded-full transition-colors relative ${
+                  spicyMode ? "bg-casino-red/60" : "bg-cream/20"
+                }`}
+              >
+                <motion.div
+                  layout
+                  className="absolute top-0.5 w-5 h-5 rounded-full bg-cream shadow-sm"
+                  animate={{ left: spicyMode ? 22 : 2 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              </div>
+            </button>
+          </div>
+
+          <NameEntry onStart={handleStart} />
+        </div>
       </div>
     );
   }
@@ -232,12 +237,15 @@ export default function MrAndMrsPage() {
     phase === "reveal";
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center px-5 py-6 safe-top safe-bottom">
+    <div
+      className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
+      style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top, 0px))' }}
+    >
       {/* Header */}
       <div className="w-full max-w-sm mb-4 flex items-center justify-between">
         <Link
           href="/"
-          className="font-body text-cream/60 text-sm hover:text-cream transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
         >
           ← Back
         </Link>
@@ -248,14 +256,14 @@ export default function MrAndMrsPage() {
             onClick={handleSpicyToggle}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-body transition-colors ${
               spicyMode
-                ? "bg-hearts-red/20 border border-hearts-red/30 text-hearts-red"
+                ? "bg-casino-red/20 border border-casino-red/30 text-casino-red"
                 : "bg-cream/10 border border-gold/15 text-cream/40"
             }`}
           >
             {spicyMode ? "🌶️" : "😇"}
             <div
               className={`w-7 h-4 rounded-full transition-colors relative ${
-                spicyMode ? "bg-hearts-red/40" : "bg-cream/15"
+                spicyMode ? "bg-casino-red/40" : "bg-cream/15"
               }`}
             >
               <motion.div
@@ -354,7 +362,7 @@ export default function MrAndMrsPage() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleP1Answer(playerNames.player2)}
-                  className="flex-1 py-4 rounded-lg bg-rose-gold/20 border border-rose-gold/30 text-rose-gold font-display text-base font-semibold min-h-[56px]"
+                  className="flex-1 py-4 rounded-lg bg-silver/20 border border-silver/30 text-silver font-display text-base font-semibold min-h-[56px]"
                 >
                   {playerNames.player2}
                 </motion.button>
@@ -398,7 +406,7 @@ export default function MrAndMrsPage() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleP2Answer(playerNames.player2)}
-                  className="flex-1 py-4 rounded-lg bg-rose-gold/20 border border-rose-gold/30 text-rose-gold font-display text-base font-semibold min-h-[56px]"
+                  className="flex-1 py-4 rounded-lg bg-silver/20 border border-silver/30 text-silver font-display text-base font-semibold min-h-[56px]"
                 >
                   {playerNames.player2}
                 </motion.button>

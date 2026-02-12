@@ -20,7 +20,7 @@ export default function PassPhone({ playerName, onReady }: PassPhoneProps) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -100 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed inset-0 bg-burgundy-dark/95 backdrop-blur-sm flex flex-col items-center justify-center z-50 px-6"
+      className="fixed inset-0 bg-felt-dark/95 backdrop-blur-sm flex flex-col items-center justify-center z-50 px-6"
     >
       <motion.div
         initial={{ scale: 0.8 }}

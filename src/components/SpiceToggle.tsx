@@ -17,7 +17,7 @@ interface SpiceToggleProps {
 
 export default function SpiceToggle({ value, onChange }: SpiceToggleProps) {
   return (
-    <div className="flex bg-burgundy-dark/50 rounded-lg p-1 border border-gold/10">
+    <div className="flex bg-felt-dark/50 rounded-lg p-1 border border-gold/10">
       {options.map((opt) => (
         <button
           key={opt.level}

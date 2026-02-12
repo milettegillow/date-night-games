@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import SpinWheel from "@/components/SpinWheel";
 import LoadingState from "@/components/LoadingState";
-import { WheelCategory } from "@/lib/types";
+import { WheelCategory, WHEEL_EMOJIS } from "@/lib/types";
 
 export default function WheelPage() {
   const [currentCategory, setCurrentCategory] = useState<WheelCategory | null>(null);
@@ -100,12 +100,15 @@ export default function WheelPage() {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center px-5 py-6 safe-top safe-bottom">
+    <div
+      className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
+      style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top, 0px))' }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between w-full max-w-sm mb-4">
         <Link
           href="/"
-          className="font-body text-cream/60 text-sm hover:text-cream transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
         >
           ← Back
         </Link>
@@ -172,7 +175,7 @@ export default function WheelPage() {
             >
               <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-5">
                 <p className="font-body text-gold/60 text-xs uppercase tracking-wider mb-2">
-                  {currentCategory}
+                  {currentCategory && WHEEL_EMOJIS[currentCategory]} {currentCategory}
                 </p>
                 <p className="font-display text-cream text-lg leading-relaxed">
                   {currentTopic}

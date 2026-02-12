@@ -6,6 +6,182 @@ export function getSystemPrompt(): string {
   return SYSTEM_PROMPT;
 }
 
+// --- Layer 1: Prompt Variants ---
+// Each variant steers the AI toward a different thematic cluster.
+// One is picked randomly per API call.
+
+const WHEEL_VARIANTS: Record<string, string[]> = {
+  "Funny Stories": [
+    "Focus on childhood, school, and growing-up stories.",
+    "Focus on work, professional life, and career mishaps.",
+    "Focus on travel, holidays, and trips abroad.",
+    "Focus on nights out, parties, and social disasters.",
+    "Focus on family gatherings and sibling-related stories.",
+  ],
+  "Big Questions": [
+    "Focus on identity, personality, and self-perception.",
+    "Focus on ambitions, careers, and the future.",
+    "Focus on values, ethics, and moral grey areas.",
+    "Focus on turning points, pivotal decisions, and alternate timelines.",
+    "Focus on society, culture, and generational differences.",
+  ],
+  "Guilty Pleasures": [
+    "Focus on entertainment: music, TV, film, and internet habits.",
+    "Focus on food, drink, and indulgent routines.",
+    "Focus on social media, apps, and technology habits.",
+    "Focus on fashion, appearance, and vanity-related pleasures.",
+    "Focus on nostalgia, childhood comforts, and throwbacks.",
+  ],
+  "Hot Takes": [
+    "Focus on social norms, etiquette, and modern culture.",
+    "Focus on food, drink, and dining opinions.",
+    "Focus on relationships, friendships, and social dynamics.",
+    "Focus on work culture, productivity, and career norms.",
+    "Focus on popular media, trends, and entertainment.",
+  ],
+  "Fears & Peeves": [
+    "Focus on irrational fears and phobias.",
+    "Focus on social irritations and etiquette violations.",
+    "Focus on workplace and professional annoyances.",
+    "Focus on technology, modern life, and daily frustrations.",
+    "Focus on relationship and friendship pet peeves.",
+  ],
+  "Confessions": [
+    "Focus on petty behaviour, grudges, and secret competitiveness.",
+    "Focus on lies, deception, and getting away with things.",
+    "Focus on hidden skills, hobbies, and double lives.",
+    "Focus on regrets, unresolved guilt, and things left unsaid.",
+    "Focus on youthful rebellion and things you did growing up.",
+  ],
+  "Situationships": [
+    "Focus on dating disasters, bad dates, and cringe moments.",
+    "Focus on red flags, dealbreakers, and dating opinions.",
+    "Focus on exes, breakups, and post-breakup behaviour.",
+    "Focus on modern dating culture, apps, and trends.",
+    "Focus on crush stories, missed connections, and awkward encounters.",
+  ],
+  "Wild Card": [
+    "Focus on hypothetical scenarios and what-if questions.",
+    "Focus on unusual life experiences and rare events.",
+    "Focus on money, spending, and financial decisions.",
+    "Focus on life-or-death scenarios and extreme hypotheticals.",
+    "Focus on secrets, hidden knowledge, and conspiracy-style questions.",
+  ],
+};
+
+const MR_AND_MRS_VARIANTS = {
+  standard: [
+    "Focus on social behaviour, friendships, and how they act around others.",
+    "Focus on skills, talents, knowledge, and things they're good (or bad) at.",
+    "Focus on daily habits, quirks, and routines.",
+    "Focus on ambition, career, bravery, and risk-taking.",
+    "Focus on emotional reactions, personality traits, and how they handle situations.",
+  ],
+  spicy: [
+    "Focus on sexual history, preferences, and bold bedroom-related questions.",
+    "Focus on moral grey areas, dishonesty, and things they'd never want made public.",
+    "Focus on jealousy, loyalty, trust, and relationship boundaries.",
+    "Focus on wild behaviour, impulsive decisions, and reckless moments.",
+    "Focus on secrets, confessions, and things people only admit in private.",
+  ],
+};
+
+const NHIE_VARIANTS: Record<string, string[]> = {
+  mild: [
+    "Focus on travel, adventure, and spontaneous experiences.",
+    "Focus on social situations, parties, and public events.",
+    "Focus on food, challenges, and trying new things.",
+    "Focus on bravery, dares, and adrenaline-fuelled experiences.",
+    "Focus on technology mishaps, online life, and modern-world experiences.",
+  ],
+  medium: [
+    "Focus on romantic and sexual experiences.",
+    "Focus on social deception, lying, and sneaky behaviour.",
+    "Focus on nights out, alcohol, and party stories.",
+    "Focus on relationship drama, exes, and romantic chaos.",
+    "Focus on rule-breaking, misbehaviour, and things you shouldn't have done.",
+  ],
+  spicy: [
+    "Focus on sexually extreme acts and bold bedroom experiences.",
+    "Focus on betrayal, cheating, and morally dark behaviour.",
+    "Focus on deception, manipulation, and secret-keeping.",
+    "Focus on revenge, sabotage, and cruel behaviour.",
+    "Focus on illegal acts, rule-breaking, and getting caught.",
+  ],
+};
+
+const WYR_VARIANTS: Record<string, string[]> = {
+  silly: [
+    "Focus on body and physical absurdities.",
+    "Focus on food, drink, and dietary restrictions.",
+    "Focus on daily life inconveniences and awkward permanent conditions.",
+    "Focus on superpowers, abilities, and fantastical twists.",
+    "Focus on social embarrassment and public spectacles.",
+  ],
+  deep: [
+    "Focus on career, success, and life purpose.",
+    "Focus on relationships, trust, and human connection.",
+    "Focus on time, mortality, and the shape of your life.",
+    "Focus on knowledge, truth, and self-awareness.",
+    "Focus on fame, legacy, and how you're remembered.",
+  ],
+  cursed: [
+    "Focus on gross sensory experiences and bodily horror.",
+    "Focus on excruciating social embarrassment and exposure.",
+    "Focus on horrible real-world choices with lasting consequences.",
+    "Focus on disgusting food and drink scenarios.",
+    "Focus on permanent uncomfortable physical sensations.",
+  ],
+  shuffle: [
+    "Lean slightly toward silly and absurd dilemmas this batch.",
+    "Lean slightly toward deep and philosophical dilemmas this batch.",
+    "Lean slightly toward cursed and uncomfortable dilemmas this batch.",
+    "Ensure a perfectly even split across silly, deep, and cursed.",
+    "Include at least one dilemma from each category that's especially extreme.",
+  ],
+};
+
+// --- Layer 2: Seed Phrases ---
+// A random seed phrase is appended to each call to nudge the output in unpredictable directions.
+
+const SEED_PHRASES = [
+  "Think about scenarios involving technology and the internet.",
+  "Include at least one question referencing food or drink.",
+  "Lean into travel and different-countries themes where possible.",
+  "Think about scenarios from someone's teenage years or early twenties.",
+  "Include something related to money, spending, or financial decisions.",
+  "Think about workplace and professional life scenarios.",
+  "Include something about music, concerts, or festivals.",
+  "Lean into friendship dynamics and group situations.",
+  "Think about scenarios involving strangers or people you've just met.",
+  "Include something related to social media or online behaviour.",
+  "Think about family dynamics and home life.",
+  "Lean into night-time, late-night, or after-dark scenarios.",
+  "Include something about competition, winning, or losing.",
+  "Think about scenarios involving animals or nature.",
+  "Include something related to holidays, celebrations, or traditions.",
+  "Think about scenarios involving cars, transport, or road trips.",
+  "Lean into questions that reference specific decades or eras.",
+  "Include something about exercise, sports, or physical challenges.",
+];
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function getRandomSeed(): string {
+  return pickRandom(SEED_PHRASES);
+}
+
+function buildExcludeClause(exclude?: string[]): string {
+  if (!exclude || exclude.length === 0) return "";
+
+  // Cap at 50 most recent items to avoid overly long prompts
+  const capped = exclude.slice(-50);
+
+  return `\n\nCRITICAL — DO NOT REPEAT: The following items have already been used this session. Do NOT repeat them, rephrase them, or generate anything with substantially the same meaning. Each new item must be clearly distinct from every item on this list:\n${capped.map((e) => `- "${e}"`).join("\n")}`;
+}
+
 export function buildUserPrompt(
   game: GameId,
   options: {
@@ -16,22 +192,130 @@ export function buildUserPrompt(
   },
 ): string {
   const count = options.count || 10;
-  const excludeClause =
-    options.exclude && options.exclude.length > 0
-      ? `\n\nDo NOT repeat or closely rephrase any of these previously used items:\n${options.exclude.map((e) => `- "${e}"`).join("\n")}`
-      : "";
+  const excludeClause = buildExcludeClause(options.exclude);
 
   switch (game) {
-    case "wheel":
-      return `Generate ${count} unique, interesting conversation topics for the category "${options.category}". These are meant to spark deep, fun conversation between a couple on a date night.
+    case "wheel": {
+      const wheelCategoryInstructions: Record<string, string> = {
+        "Funny Stories": `Category: Funny Stories. Trigger actual anecdotes. These should make someone immediately think of a specific event they can tell as a story.
 
-Each topic should be a specific question or prompt — not just a broad theme. Make them thought-provoking, personal, and engaging.
+Good examples:
+- "What's the most chaotic night out you've ever had?"
+- "What's a story your friends always bring up to embarrass you?"
+- "What's the worst lie you've ever told that somehow worked?"
+- "What's the most embarrassing thing you've done in a professional setting?"
+- "What's the most ridiculous thing you've ever spent money on?"
+- "What's the most absurd misunderstanding you've been involved in?"
 
-Return a JSON array of ${count} strings.
-Example: ["If you could relive one day from our relationship, which would it be?", "What's a dream you've never told anyone about?"]${excludeClause}`;
+Bad examples: "Tell a funny story" (too vague), "What makes you laugh?" (too broad, not story-triggering)`,
+
+        "Big Questions": `Category: Big Questions. Life, identity, values, the future. These should make people think, not cringe.
+
+Good examples:
+- "If money was irrelevant, what would your average Tuesday look like?"
+- "What's a belief you held strongly 5 years ago that you've completely changed your mind on?"
+- "What do you think people misunderstand about you most?"
+- "What's something you want to have done before you turn 40?"
+- "When did you last feel genuinely out of your depth?"
+- "What's a part of your personality you've had to actively work on?"
+- "If you could go back to university and study something completely different, what would it be?"
+
+Bad examples: "What are your hopes and dreams?" (too vague, sappy), "Where do you see yourself in 5 years?" (job interview)`,
+
+        "Guilty Pleasures": `Category: Guilty Pleasures. Things you'd only admit after a couple of drinks. Embarrassing tastes, habits, and preferences.
+
+Good examples:
+- "What's a celebrity you find attractive that your friends would roast you for?"
+- "What's a song you'd never play in front of others but absolutely love?"
+- "What app do you waste the most time on, and how bad is the screen time?"
+- "What's a TV show you're embarrassed to admit you've watched all of?"
+- "What's a comfort food you eat that other people would judge you for?"
+- "What's a trend you secretly enjoyed even though you publicly mocked it?"
+
+Bad examples: "What's your most embarrassing guilty pleasure song that you secretly dance to when no one's watching?" (too wordy, too performative)`,
+
+        "Hot Takes": `Category: Hot Takes. Opinions that might start a friendly argument. The goal is genuine disagreement and debate.
+
+Good examples:
+- "What's a popular thing that you genuinely think is overrated?"
+- "What's an opinion you hold that most people disagree with?"
+- "What's a hill you'd die on that other people think is ridiculous?"
+- "What's a social norm you think is completely pointless?"
+- "What's something everyone seems to enjoy that you genuinely don't understand the appeal of?"
+- "What's a 'nice' thing people do that you secretly find annoying?"`,
+
+        "Fears & Peeves": `Category: Fears & Pet Peeves. Real fears and genuine irritations. Not sappy fears like "losing the people I love". Actual specific things.
+
+Good examples:
+- "What's something that terrifies you that most people aren't bothered by?"
+- "What's the most scared you've ever been?"
+- "Is there something you avoid that you know is irrational?"
+- "What's a small everyday thing that irritates you way more than it should?"
+- "What's a personality trait in other people that you just cannot deal with?"
+- "What's something that gives you the ick immediately?"`,
+
+        "Confessions": `Category: Confessions. Things you probably haven't told many people. Secrets, petty behaviour, hidden sides of yourself.
+
+Good examples:
+- "What's something you've never apologised for but probably should?"
+- "What's the pettiest thing you've ever done?"
+- "What's a secret skill or hobby you have that most people don't know about?"
+- "What's something you did that you still can't believe you got away with?"
+- "What's a lie you've maintained for so long that it would be weird to correct it now?"
+- "Have you ever completely reinvented yourself, and what triggered it?"`,
+
+        "Situationships": `Category: Situationships. Dating stories, relationship opinions, love life chaos. NOT about the two people playing. About dating in general, exes, and the absurdity of modern romance.
+
+Good examples:
+- "What's the biggest red flag you've ever ignored?"
+- "What's the worst date you've ever been on?"
+- "What's a dealbreaker for you that other people think is unreasonable?"
+- "What's the most unhinged thing you've ever done after a breakup?"
+- "What's a dating trend you think is genuinely toxic?"
+- "What's the longest situationship you've been in, and how did it end?"
+
+Bad examples: "If we could wake up tomorrow in any city together..." (assumes romantic relationship, sappy), "What first attracted you to your date?" (references the players)`,
+
+        "Wild Card": `Category: Wild Card. Anything goes. The most interesting, unexpected, or provocative questions that don't fit neatly elsewhere. Conversation grenades.
+
+Good examples:
+- "What's the most illegal thing you've done?"
+- "What's something you've done that you still can't believe you got away with?"
+- "If you had to disappear and start a new life tomorrow, where would you go and what would you do?"
+- "What's the most expensive thing you've broken that wasn't yours?"
+- "What's a decision that completely changed the direction of your life?"
+- "What's the most unhinged impulse purchase you've ever made?"`,
+      };
+
+      const catKey = options.category || "Wild Card";
+      const catInstructions = wheelCategoryInstructions[catKey] || wheelCategoryInstructions["Wild Card"];
+      const variant = pickRandom(WHEEL_VARIANTS[catKey] || WHEEL_VARIANTS["Wild Card"]);
+      const seed = getRandomSeed();
+
+      return `Generate ${count} conversation topics/questions for the specified category.
+
+${catInstructions}
+
+THEMATIC DIRECTION FOR THIS BATCH: ${variant}
+CREATIVE SEED: ${seed}
+
+RULES (follow these strictly):
+- Never use emdashes. Use parentheses if clarification is needed.
+- Never reference "your partner", "your date", "your relationship", "together", "as a couple", or anything that assumes romance.
+- Questions should be addressed to "you" (singular), not "you two" or "both of you".
+- Every topic should be a genuine conversation opener that could sustain at least 5 minutes of discussion.
+- Keep questions concise. One or two sentences max.
+- British English spelling throughout.
+- Questions should be specific enough to get an interesting answer. "What do you dream about?" is too vague. "If you could be world-class at one thing overnight, what would you pick?" is good.
+- Vary the format: some direct questions, some "what's the most...", some "have you ever...", some "what's your take on...". Don't use the same structure repeatedly.
+
+Return a JSON array of ${count} strings.${excludeClause}`;
+    }
 
     case "mr-and-mrs": {
       const isSpicy = options.spiceLevel === "spicy";
+      const mmVariant = pickRandom(isSpicy ? MR_AND_MRS_VARIANTS.spicy : MR_AND_MRS_VARIANTS.standard);
+      const mmSeed = getRandomSeed();
 
       const spicyInstructions = isSpicy
         ? `SPICY MODE. ALL questions must be sexual or morally edgy. Every item must have spicy: true. No clean/standard questions in this batch.
@@ -59,6 +343,9 @@ Spicy questions should make people squirm slightly before answering. A mix of se
       return `Generate ${count} "Who is more likely to..." / "Who is the bigger..." / "Who would..." questions for a two-player game where both players independently pick which person the question applies to more.
 
 ${spicyInstructions}
+
+THEMATIC DIRECTION FOR THIS BATCH: ${mmVariant}
+CREATIVE SEED: ${mmSeed}
 
 Good standard examples:
 - "Who is more likely to survive a zombie apocalypse?"
@@ -107,6 +394,10 @@ Example: [{"question": "Who is more likely to survive a zombie apocalypse?", "sp
     }
 
     case "never-have-i-ever": {
+      const nhieLevel = options.spiceLevel || "mild";
+      const nhieVariant = pickRandom(NHIE_VARIANTS[nhieLevel] || NHIE_VARIANTS.mild);
+      const nhieSeed = getRandomSeed();
+
       const spiceInstructions = {
         mild: `MILD level. Completely non-sexual. Genuinely eventful, adventurous, or surprising things that a nice, stand-up person might have done. Still interesting and story-worthy, not boring.
 
@@ -131,9 +422,12 @@ Morally dark examples: "cheated on a partner", "lied to the police", "deliberate
 Bad examples (these belong in Medium, not Spicy): "had a one-night stand", "kissed a stranger", "sent a nude to the wrong person", "gone skinny dipping"`,
       };
 
-      return `Generate ${count} "Never have I ever" statement completions at the "${options.spiceLevel || "mild"}" spice level.
+      return `Generate ${count} "Never have I ever" statement completions at the "${nhieLevel}" spice level.
 
-${spiceInstructions[options.spiceLevel || "mild"]}
+${spiceInstructions[nhieLevel]}
+
+THEMATIC DIRECTION FOR THIS BATCH: ${nhieVariant}
+CREATIVE SEED: ${nhieSeed}
 
 RULES (follow these strictly):
 - Every statement must be a single, specific thing. NEVER combine two things with "or".
@@ -150,6 +444,8 @@ Example: ["hitchhiked", "crashed a wedding", "gone swimming in the sea at night"
 
     case "would-you-rather": {
       const wyrCategory = options.category || "shuffle";
+      const wyrVariant = pickRandom(WYR_VARIANTS[wyrCategory] || WYR_VARIANTS.shuffle);
+      const wyrSeed = getRandomSeed();
 
       const wyrCategoryInstructions: Record<string, string> = {
         silly: `SILLY category. Absurd, hypothetical, funny. The options should be ridiculous enough to be funny but specific enough to be genuinely debatable. Think "pub argument that gets way too heated for what it is."
@@ -209,6 +505,9 @@ Refer to these descriptions:
       return `Generate ${count} "Would you rather" dilemmas for the "${wyrCategory}" category.
 
 ${wyrCategoryInstructions[wyrCategory]}
+
+THEMATIC DIRECTION FOR THIS BATCH: ${wyrVariant}
+CREATIVE SEED: ${wyrSeed}
 
 RULES (follow these strictly):
 - Never use emdashes. Use parentheses if clarification is needed.

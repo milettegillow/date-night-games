@@ -245,42 +245,47 @@ export default function WouldYouRatherPage() {
 
   if (phase === "names") {
     return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center px-5 py-6">
-        <Link
-          href="/"
-          className="font-body text-cream/60 text-sm mb-6 self-start hover:text-cream transition-colors"
-        >
-          ← Back
-        </Link>
-        <motion.h1
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="font-display text-2xl font-bold text-gold mb-2"
-        >
-          Would You Rather
-        </motion.h1>
-        <p className="font-body text-cream/50 text-xs text-center mb-4 max-w-xs">
-          Do you think alike? Pick the same answer to score!
-        </p>
-
-        {/* Category tabs on intro screen */}
-        <div className="flex gap-1.5 mb-6 w-full max-w-sm">
-          {WYR_CATEGORIES.map((cat) => (
-            <button
-              key={cat.value}
-              onClick={() => { vibrate(20); setCategory(cat.value); }}
-              className={`relative flex-1 py-2 rounded-lg font-body text-xs font-medium transition-colors min-h-[36px] ${
-                category === cat.value
-                  ? "bg-gold/20 border border-gold/30 text-gold"
-                  : "bg-burgundy-dark/50 border border-gold/10 text-cream/40"
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
+      <div className="min-h-[100dvh] flex flex-col items-center px-5 pt-10 pb-6">
+        <div className="w-full max-w-sm mb-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
+          >
+            ← Back
+          </Link>
         </div>
 
-        <NameEntry onStart={handleStart} />
+        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm">
+          <motion.h1
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="font-display text-2xl font-bold text-gold mb-2"
+          >
+            Would You Rather
+          </motion.h1>
+          <p className="font-body text-cream/50 text-xs text-center mb-4 max-w-xs">
+            Do you think alike? Pick the same answer to score!
+          </p>
+
+          {/* Category tabs on intro screen */}
+          <div className="flex gap-1.5 mb-6 w-full">
+            {WYR_CATEGORIES.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => { vibrate(20); setCategory(cat.value); }}
+                className={`relative flex-1 py-2 rounded-lg font-body text-xs font-medium transition-colors min-h-[36px] ${
+                  category === cat.value
+                    ? "bg-gold/20 border border-gold/30 text-gold"
+                    : "bg-felt-dark/50 border border-gold/10 text-cream/40"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          <NameEntry onStart={handleStart} />
+        </div>
       </div>
     );
   }
@@ -300,12 +305,15 @@ export default function WouldYouRatherPage() {
     : null;
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center px-5 py-6 safe-top safe-bottom">
+    <div
+      className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
+      style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top, 0px))' }}
+    >
       {/* Header */}
       <div className="w-full max-w-sm mb-4">
         <Link
           href="/"
-          className="font-body text-cream/60 text-sm hover:text-cream transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
         >
           ← Back
         </Link>
@@ -329,7 +337,7 @@ export default function WouldYouRatherPage() {
               className={`relative flex-1 py-2 rounded-lg font-body text-xs font-medium transition-colors min-h-[36px] ${
                 category === cat.value
                   ? "bg-gold/20 border border-gold/30 text-gold"
-                  : "bg-burgundy-dark/50 border border-gold/10 text-cream/40"
+                  : "bg-felt-dark/50 border border-gold/10 text-cream/40"
               }`}
             >
               {cat.label}
@@ -416,7 +424,7 @@ export default function WouldYouRatherPage() {
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={() => handleP1Answer("B")}
-                  className="py-4 px-5 rounded-lg bg-rose-gold/20 border border-rose-gold/30 text-cream font-body text-sm font-medium text-left min-h-[56px] leading-relaxed"
+                  className="py-4 px-5 rounded-lg bg-silver/20 border border-silver/30 text-cream font-body text-sm font-medium text-left min-h-[56px] leading-relaxed"
                 >
                   {currentDilemma.optionB}
                 </motion.button>
@@ -460,7 +468,7 @@ export default function WouldYouRatherPage() {
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={() => handleP2Answer("B")}
-                  className="py-4 px-5 rounded-lg bg-rose-gold/20 border border-rose-gold/30 text-cream font-body text-sm font-medium text-left min-h-[56px] leading-relaxed"
+                  className="py-4 px-5 rounded-lg bg-silver/20 border border-silver/30 text-cream font-body text-sm font-medium text-left min-h-[56px] leading-relaxed"
                 >
                   {currentDilemma.optionB}
                 </motion.button>
