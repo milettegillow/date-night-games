@@ -14,7 +14,7 @@ export default function PostHogProvider({
     if (!key) return;
 
     posthog.init(key, {
-      api_host: "https://us.i.posthog.com",
+      api_host: "https://eu.i.posthog.com",
       capture_pageview: true,
       capture_pageleave: true,
     });

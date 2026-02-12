@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 const POSTHOG_API_KEY = process.env.POSTHOG_PERSONAL_API_KEY;
 const POSTHOG_PROJECT_ID = process.env.POSTHOG_PROJECT_ID;
-const POSTHOG_HOST = "https://us.i.posthog.com";
+const POSTHOG_HOST = "https://eu.i.posthog.com";
 
 async function hogql(query: string): Promise<{ results: unknown[][] }> {
   const res = await fetch(
