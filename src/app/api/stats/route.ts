@@ -76,10 +76,10 @@ export async function GET() {
       hogql(`SELECT properties.category, count() FROM events WHERE event = 'wyr_game_start' GROUP BY properties.category ORDER BY count() DESC`),
 
       // Mr & Mrs average score
-      hogql(`SELECT avg(toFloat64(properties.score)) FROM events WHERE event = 'mrsmrs_game_complete'`),
+      hogql(`SELECT avg(toFloat(properties.score)) FROM events WHERE event = 'mrsmrs_game_complete'`),
 
       // NHIE average score
-      hogql(`SELECT avg(toFloat64(properties.score)) FROM events WHERE event = 'nhie_game_complete'`),
+      hogql(`SELECT avg(toFloat(properties.score)) FROM events WHERE event = 'nhie_game_complete'`),
 
       // Most popular wheel category
       hogql(`SELECT properties.category, count() FROM events WHERE event = 'wheel_spin' GROUP BY properties.category ORDER BY count() DESC LIMIT 1`),
