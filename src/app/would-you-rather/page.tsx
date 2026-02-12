@@ -110,6 +110,7 @@ export default function WouldYouRatherPage() {
         setDilemmas(items);
         setPhase("pass-to-p1");
       } catch (err) {
+        console.log('[Analytics]', 'api_error', { game: "would-you-rather", error: String(err) });
         posthog.capture("api_error", { game: "would-you-rather", error: String(err) });
         setError("Shuffling the deck... try again!");
       }
@@ -119,12 +120,14 @@ export default function WouldYouRatherPage() {
   );
 
   const handleStart = () => {
+    console.log('[Analytics]', 'wyr_game_start', { category });
     posthog.capture("wyr_game_start", { category });
     loadDilemmas();
   };
 
   const handleCategoryChange = (newCat: WyrCategory) => {
     vibrate(20);
+    console.log('[Analytics]', 'wyr_category_switch', { from: category, to: newCat });
     posthog.capture("wyr_category_switch", { from: category, to: newCat });
     setCategory(newCat);
     console.log("[WYR] Category changed to:", newCat);
@@ -152,7 +155,8 @@ export default function WouldYouRatherPage() {
     setP2Answer(answer);
     const matched = answer === p1Answer;
     if (matched) setScore((s) => s + 1);
-    posthog.capture("wyr_round_complete", { round, matched, category: currentDilemma?.category ?? category });
+    console.log('[Analytics]', 'wyr_round_complete', { round, totalRounds: TOTAL_ROUNDS, matched, category: currentDilemma?.category ?? category });
+    posthog.capture("wyr_round_complete", { round, totalRounds: TOTAL_ROUNDS, matched, category: currentDilemma?.category ?? category });
     setPhase("reveal");
   };
 
@@ -200,6 +204,7 @@ export default function WouldYouRatherPage() {
     setUsedDilemmas(newUsed);
 
     if (round >= TOTAL_ROUNDS) {
+      console.log('[Analytics]', 'wyr_game_complete', { score, category });
       posthog.capture("wyr_game_complete", { score, category });
       setDilemmas(remaining);
       setPhase("end");
@@ -222,6 +227,7 @@ export default function WouldYouRatherPage() {
           setPhase("pass-to-p1");
         })
         .catch((err) => {
+          console.log('[Analytics]', 'api_error', { game: "would-you-rather", error: String(err) });
           posthog.capture("api_error", { game: "would-you-rather", error: String(err) });
           setError("Shuffling the deck... try again!");
         });
@@ -269,7 +275,7 @@ export default function WouldYouRatherPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="font-display font-bold text-gold leading-tight mb-4"
-          style={{ fontSize: 'clamp(2.25rem, 11vw, 3rem)' }}
+          style={{ fontSize: 'clamp(1.75rem, 8vw, 2.5rem)' }}
         >
           Would You Rather
         </motion.h1>
@@ -335,7 +341,7 @@ export default function WouldYouRatherPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="font-display font-bold text-gold leading-tight mb-3"
-        style={{ fontSize: 'clamp(2.25rem, 11vw, 3rem)' }}
+        style={{ fontSize: 'clamp(1.75rem, 8vw, 2.5rem)' }}
       >
         Would You Rather
       </motion.h1>

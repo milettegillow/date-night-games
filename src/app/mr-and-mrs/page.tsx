@@ -74,12 +74,14 @@ export default function MrAndMrsPage() {
       setQuestions(items);
       setPhase("pass-to-p1");
     } catch (err) {
+      console.log('[Analytics]', 'api_error', { game: "mr-and-mrs", error: String(err) });
       posthog.capture("api_error", { game: "mr-and-mrs", error: String(err) });
       setError("Shuffling the deck... try again!");
     }
   }, [fetchQuestions, usedQuestions, spicyMode]);
 
   const handleStart = () => {
+    console.log('[Analytics]', 'mrsmrs_game_start', { spicy: spicyMode });
     posthog.capture("mrsmrs_game_start", { spicy: spicyMode });
     loadQuestions();
   };
@@ -118,7 +120,8 @@ export default function MrAndMrsPage() {
     setP2Answer(answer);
     const matched = answer === p1Answer;
     if (matched) setScore((s) => s + 1);
-    posthog.capture("mrsmrs_round_complete", { round, matched, spicy: currentQuestion?.spicy ?? spicyMode });
+    console.log('[Analytics]', 'mrsmrs_round_complete', { round, totalRounds: TOTAL_ROUNDS, matched, spicy: currentQuestion?.spicy ?? spicyMode });
+    posthog.capture("mrsmrs_round_complete", { round, totalRounds: TOTAL_ROUNDS, matched, spicy: currentQuestion?.spicy ?? spicyMode });
     setPhase("reveal");
   };
 
@@ -134,6 +137,7 @@ export default function MrAndMrsPage() {
     remaining = remaining.filter((q) => q.spicy === spicyMode);
 
     if (round >= TOTAL_ROUNDS) {
+      console.log('[Analytics]', 'mrsmrs_game_complete', { score, spicy: spicyMode });
       posthog.capture("mrsmrs_game_complete", { score, spicy: spicyMode });
       setQuestions(remaining);
       setPhase("end");
@@ -155,6 +159,7 @@ export default function MrAndMrsPage() {
           setPhase("pass-to-p1");
         })
         .catch((err) => {
+          console.log('[Analytics]', 'api_error', { game: "mr-and-mrs", error: String(err) });
           posthog.capture("api_error", { game: "mr-and-mrs", error: String(err) });
           setError("Shuffling the deck... try again!");
         });

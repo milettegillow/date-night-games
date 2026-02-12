@@ -19,6 +19,7 @@ export default function WheelPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showTopic, setShowTopic] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const fetchTopics = useCallback(
     async (category: WheelCategory, exclude: string[]) => {
@@ -72,6 +73,7 @@ export default function WheelPage() {
           });
         }
       } catch (err) {
+        console.log('[Analytics]', 'api_error', { game: "wheel", error: String(err) });
         posthog.capture("api_error", { game: "wheel", error: String(err) });
         setError("Shuffling the deck... try again!");
       } finally {
@@ -83,23 +85,31 @@ export default function WheelPage() {
 
   const handleCategorySelected = useCallback(
     (category: WheelCategory) => {
+      if (!hasStarted) {
+        console.log('[Analytics]', 'wheel_game_start', {});
+        posthog.capture("wheel_game_start", {});
+        setHasStarted(true);
+      }
+      console.log('[Analytics]', 'wheel_spin', { category });
       posthog.capture("wheel_spin", { category });
       setCurrentCategory(category);
       setShowTopic(false);
       getTopicFromPool(category);
     },
-    [getTopicFromPool],
+    [getTopicFromPool, hasStarted],
   );
 
   const handleNextTopic = () => {
     if (currentCategory) {
-      posthog.capture("wheel_next_topic");
+      console.log('[Analytics]', 'wheel_next_topic', { category: currentCategory });
+      posthog.capture("wheel_next_topic", { category: currentCategory });
       setShowTopic(false);
       setTimeout(() => getTopicFromPool(currentCategory), 300);
     }
   };
 
   const handleSpinAgain = () => {
+    console.log('[Analytics]', 'wheel_spin_again', {});
     posthog.capture("wheel_spin_again");
     setShowTopic(false);
     setCurrentTopic(null);

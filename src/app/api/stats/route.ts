@@ -44,7 +44,7 @@ export async function GET() {
     const [
       sessionsResult,
       gamesPlayedResult,
-      roundsResult,
+      totalInteractionsResult,
       gamePopularityResult,
       nhieSpiceResult,
       mrsmrsSpicyResult,
@@ -53,15 +53,19 @@ export async function GET() {
       nhieScoreResult,
       wheelCategoryResult,
       wyrMatchResult,
+      completionRateResult,
+      roundsPerSessionResult,
+      dropoffResult,
+      wheelEngagementResult,
     ] = await Promise.all([
       // Total unique sessions
       hogql(`SELECT count(DISTINCT "$session_id") FROM events WHERE "$session_id" IS NOT NULL`),
 
-      // Total games played (all game_start events)
-      hogql(`SELECT count() FROM events WHERE event IN ('mrsmrs_game_start', 'nhie_game_start', 'wyr_game_start')`),
+      // Total games started (all game_start events including wheel)
+      hogql(`SELECT count() FROM events WHERE event IN ('mrsmrs_game_start', 'nhie_game_start', 'wyr_game_start', 'wheel_game_start')`),
 
-      // Total rounds completed
-      hogql(`SELECT count() FROM events WHERE event IN ('mrsmrs_round_complete', 'nhie_round_complete', 'wyr_round_complete', 'wheel_spin')`),
+      // Total interactions (every round_complete + wheel actions)
+      hogql(`SELECT count() FROM events WHERE event IN ('mrsmrs_round_complete', 'nhie_round_complete', 'wyr_round_complete', 'wheel_spin', 'wheel_next_topic')`),
 
       // Game popularity breakdown
       hogql(`SELECT properties.game, count() FROM events WHERE event = 'game_selected' GROUP BY properties.game ORDER BY count() DESC`),
@@ -88,17 +92,64 @@ export async function GET() {
       hogql(`SELECT
         countIf(properties.matched = 'true') * 100.0 / count()
         FROM events WHERE event = 'wyr_round_complete'`),
+
+      // Completion rate: starts vs completes per game
+      hogql(`SELECT event, count() FROM events WHERE event IN ('mrsmrs_game_start', 'mrsmrs_game_complete', 'nhie_game_start', 'nhie_game_complete', 'wyr_game_start', 'wyr_game_complete') GROUP BY event`),
+
+      // Average rounds per session (max round reached per session)
+      hogql(`SELECT "$session_id", max(toFloat(properties.round)) FROM events WHERE event IN ('mrsmrs_round_complete', 'nhie_round_complete', 'wyr_round_complete') AND "$session_id" IS NOT NULL GROUP BY "$session_id"`),
+
+      // Drop-off by round number
+      hogql(`SELECT properties.round, count() FROM events WHERE event IN ('mrsmrs_round_complete', 'nhie_round_complete', 'wyr_round_complete') GROUP BY properties.round ORDER BY properties.round ASC`),
+
+      // Wheel engagement: spins vs next topics
+      hogql(`SELECT countIf(event = 'wheel_spin'), countIf(event = 'wheel_next_topic') FROM events WHERE event IN ('wheel_spin', 'wheel_next_topic')`),
     ]);
+
+    // Compute completion rate from start/complete event counts
+    const completionRows = completionRateResult.results || [];
+    const eventCount = (name: string) =>
+      (completionRows.find(([e]) => e === name)?.[1] as number) ?? 0;
+    const totalStarts = eventCount("mrsmrs_game_start") + eventCount("nhie_game_start") + eventCount("wyr_game_start");
+    const totalCompletes = eventCount("mrsmrs_game_complete") + eventCount("nhie_game_complete") + eventCount("wyr_game_complete");
+
+    // Compute average rounds per session from per-session max round
+    const sessionRounds = (roundsPerSessionResult.results || []).map(
+      ([, maxRound]) => Number(maxRound) || 0
+    );
+    const avgRoundsPerSession = sessionRounds.length > 0
+      ? Math.round((sessionRounds.reduce((a, b) => a + b, 0) / sessionRounds.length) * 10) / 10
+      : null;
+
+    // Compute drop-off: find the round with the biggest absolute drop
+    const dropoffRows = (dropoffResult.results || [])
+      .map(([round, count]) => ({ round: Number(round), count: Number(count) }))
+      .sort((a, b) => a.round - b.round);
+    let biggestDrop = { fromRound: 0, drop: 0 };
+    for (let i = 1; i < dropoffRows.length; i++) {
+      const drop = dropoffRows[i - 1].count - dropoffRows[i].count;
+      if (drop > biggestDrop.drop) {
+        biggestDrop = { fromRound: dropoffRows[i - 1].round, drop };
+      }
+    }
 
     const stats = {
       hero: {
         sessions: sessionsResult.results[0]?.[0] ?? 0,
         gamesPlayed: gamesPlayedResult.results[0]?.[0] ?? 0,
-        roundsCompleted: roundsResult.results[0]?.[0] ?? 0,
+        totalInteractions: totalInteractionsResult.results[0]?.[0] ?? 0,
       },
       gamePopularity: (gamePopularityResult.results || []).map(
         ([game, count]) => ({ game, count })
       ),
+      engagement: {
+        completionRate: totalStarts > 0 ? Math.round((totalCompletes / totalStarts) * 100) : null,
+        avgRoundsPerSession,
+        dropoffRound: biggestDrop.drop > 0 ? biggestDrop.fromRound : null,
+        roundCounts: dropoffRows,
+        wheelSpins: (wheelEngagementResult.results[0]?.[0] as number) ?? 0,
+        wheelNextTopics: (wheelEngagementResult.results[0]?.[1] as number) ?? 0,
+      },
       settings: {
         nhieSpiceLevels: (nhieSpiceResult.results || []).map(
           ([level, count]) => ({ level, count })

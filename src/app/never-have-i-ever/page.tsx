@@ -61,6 +61,7 @@ export default function NeverHaveIEverPage() {
   );
 
   const startGame = useCallback(async () => {
+    console.log('[Analytics]', 'nhie_game_start', { spiceLevel });
     posthog.capture("nhie_game_start", { spiceLevel });
     setPhase("loading");
     setError(null);
@@ -69,6 +70,7 @@ export default function NeverHaveIEverPage() {
       setStatements(items);
       setPhase("statement");
     } catch (err) {
+      console.log('[Analytics]', 'api_error', { game: "never-have-i-ever", error: String(err) });
       posthog.capture("api_error", { game: "never-have-i-ever", error: String(err) });
       setError("Shuffling the deck... try again!");
     }
@@ -78,7 +80,8 @@ export default function NeverHaveIEverPage() {
     vibrate(30);
     setScore((s) => s + points);
     setPointsAdded(points);
-    posthog.capture("nhie_round_complete", { round, answer: points, spiceLevel });
+    console.log('[Analytics]', 'nhie_round_complete', { round, totalRounds: TOTAL_ROUNDS, answer: points, spiceLevel });
+    posthog.capture("nhie_round_complete", { round, totalRounds: TOTAL_ROUNDS, answer: points, spiceLevel });
 
     // Show points briefly, then advance
     setTimeout(() => {
@@ -89,6 +92,7 @@ export default function NeverHaveIEverPage() {
       setStatements(remaining);
 
       if (round >= TOTAL_ROUNDS) {
+        console.log('[Analytics]', 'nhie_game_complete', { score: score + points, spiceLevel });
         posthog.capture("nhie_game_complete", { score: score + points, spiceLevel });
         setPhase("end");
         return;
@@ -134,7 +138,7 @@ export default function NeverHaveIEverPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="font-display font-bold text-gold leading-tight mb-4"
-          style={{ fontSize: 'clamp(2.25rem, 11vw, 3rem)' }}
+          style={{ fontSize: 'clamp(1.6rem, 7.5vw, 2.25rem)' }}
         >
           Never Have I Ever
         </motion.h1>
@@ -183,7 +187,7 @@ export default function NeverHaveIEverPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="font-display font-bold text-gold leading-tight mb-4"
-        style={{ fontSize: 'clamp(2.25rem, 11vw, 3rem)' }}
+        style={{ fontSize: 'clamp(1.6rem, 7.5vw, 2.25rem)' }}
       >
         Never Have I Ever
       </motion.h1>

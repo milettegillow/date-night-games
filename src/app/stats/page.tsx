@@ -8,9 +8,17 @@ interface Stats {
   hero: {
     sessions: number;
     gamesPlayed: number;
-    roundsCompleted: number;
+    totalInteractions: number;
   };
   gamePopularity: { game: string; count: number }[];
+  engagement: {
+    completionRate: number | null;
+    avgRoundsPerSession: number | null;
+    dropoffRound: number | null;
+    roundCounts: { round: number; count: number }[];
+    wheelSpins: number;
+    wheelNextTopics: number;
+  };
   settings: {
     nhieSpiceLevels: { level: string; count: number }[];
     mrsmrsSpicy: { spicyPercent: number; total: number };
@@ -168,8 +176,8 @@ export default function StatsPage() {
                   delay={0.1}
                 />
                 <HeroStat
-                  value={formatNumber(stats.hero.roundsCompleted)}
-                  label="Rounds"
+                  value={formatNumber(stats.hero.totalInteractions)}
+                  label="Interactions"
                   delay={0.2}
                 />
               </>
@@ -200,6 +208,73 @@ export default function StatsPage() {
               )
             ) : (
               <SkeletonBars />
+            )}
+          </Section>
+
+          {/* Engagement */}
+          <Section title="Engagement">
+            {stats ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  {stats.engagement.completionRate != null && (
+                    <FactCard
+                      emoji="🏁"
+                      value={`${stats.engagement.completionRate}%`}
+                      label="Completion Rate"
+                    />
+                  )}
+                  {stats.engagement.avgRoundsPerSession != null && (
+                    <FactCard
+                      emoji="🎯"
+                      value={`${stats.engagement.avgRoundsPerSession}`}
+                      label="Avg Rounds/Session"
+                    />
+                  )}
+                  {(stats.engagement.wheelSpins > 0 || stats.engagement.wheelNextTopics > 0) && (
+                    <FactCard
+                      emoji="♣"
+                      value={`${formatNumber(stats.engagement.wheelSpins)}`}
+                      label="Wheel Spins"
+                    />
+                  )}
+                  {stats.engagement.wheelNextTopics > 0 && (
+                    <FactCard
+                      emoji="➡️"
+                      value={`${formatNumber(stats.engagement.wheelNextTopics)}`}
+                      label="Next Topic Taps"
+                    />
+                  )}
+                </div>
+
+                {/* Drop-off chart */}
+                {stats.engagement.roundCounts.length > 0 && (
+                  <div>
+                    <p className="font-body text-cream/50 text-xs uppercase tracking-wider mb-3">
+                      Rounds Played{stats.engagement.dropoffRound != null && (
+                        <span className="text-cream/30 normal-case tracking-normal">
+                          {" "}— biggest drop after round {stats.engagement.dropoffRound}
+                        </span>
+                      )}
+                    </p>
+                    <BarChart
+                      items={stats.engagement.roundCounts.map((r) => ({
+                        label: `Round ${r.round}`,
+                        count: r.count,
+                      }))}
+                    />
+                  </div>
+                )}
+
+                {stats.engagement.completionRate == null &&
+                  stats.engagement.avgRoundsPerSession == null &&
+                  stats.engagement.wheelSpins === 0 &&
+                  stats.engagement.roundCounts.length === 0 && <EmptyState />}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+              </div>
             )}
           </Section>
 
