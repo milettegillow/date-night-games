@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import SpiceToggle from "@/components/SpiceToggle";
@@ -38,6 +38,21 @@ export default function NeverHaveIEverPage() {
   const [score, setScore] = useState(0);
   const [pointsAdded, setPointsAdded] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const startTime = useRef(Date.now());
+  const hasEnded = useRef(false);
+  const clickCount = useRef(0);
+  const roundRef = useRef(1);
+
+  useEffect(() => {
+    return () => {
+      if (hasEnded.current) return;
+      const duration = Math.round((Date.now() - startTime.current) / 1000);
+      const props = { game: 'never-have-i-ever', duration_seconds: duration, rounds_played: roundRef.current, total_clicks: clickCount.current, completed: false };
+      console.log('[Analytics]', 'game_session_end', props);
+      posthog.capture('game_session_end', props);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const currentStatement = statements[0];
 
@@ -77,6 +92,7 @@ export default function NeverHaveIEverPage() {
   }, [fetchStatements, spiceLevel]);
 
   const handleAnswer = (points: number) => {
+    clickCount.current += 1;
     vibrate(30);
     setScore((s) => s + points);
     setPointsAdded(points);
@@ -94,11 +110,17 @@ export default function NeverHaveIEverPage() {
       if (round >= TOTAL_ROUNDS) {
         console.log('[Analytics]', 'nhie_game_complete', { score: score + points, spiceLevel });
         posthog.capture("nhie_game_complete", { score: score + points, spiceLevel });
+        const duration = Math.round((Date.now() - startTime.current) / 1000);
+        const sessionProps = { game: 'never-have-i-ever', duration_seconds: duration, rounds_played: round, total_clicks: clickCount.current, completed: true };
+        console.log('[Analytics]', 'game_session_end', sessionProps);
+        posthog.capture('game_session_end', sessionProps);
+        hasEnded.current = true;
         setPhase("end");
         return;
       }
 
       setRound((r) => r + 1);
+      roundRef.current = round + 1;
 
       // Refetch if running low
       if (remaining.length < 3) {
@@ -116,6 +138,10 @@ export default function NeverHaveIEverPage() {
     setScore(0);
     setUsedStatements([]);
     setPointsAdded(null);
+    startTime.current = Date.now();
+    hasEnded.current = false;
+    clickCount.current = 0;
+    roundRef.current = 1;
     setPhase("intro");
   };
 
@@ -236,7 +262,7 @@ export default function NeverHaveIEverPage() {
               style={{ transformStyle: "preserve-3d" }}
               className="w-full max-w-sm"
             >
-              <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-6 mb-5 relative">
+              <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-6 mb-5 relative overflow-visible">
                 <p className="font-body text-cream/50 text-sm text-center mb-2">
                   Never have I ever...
                 </p>

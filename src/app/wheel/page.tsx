@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import SpinWheel from "@/components/SpinWheel";
@@ -20,6 +20,20 @@ export default function WheelPage() {
   const [showTopic, setShowTopic] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
+  const startTime = useRef(Date.now());
+  const clickCount = useRef(0);
+  const topicsRef = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      if (!startTime.current) return;
+      const duration = Math.round((Date.now() - startTime.current) / 1000);
+      const props = { game: 'wheel', duration_seconds: duration, topics_explored: topicsRef.current, total_clicks: clickCount.current, completed: false };
+      console.log('[Analytics]', 'game_session_end', props);
+      posthog.capture('game_session_end', props);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchTopics = useCallback(
     async (category: WheelCategory, exclude: string[]) => {
@@ -61,6 +75,7 @@ export default function WheelPage() {
         setUsedTopics((prev) => [...prev, topic]);
         setCurrentTopic(topic);
         setTopicsExplored((prev) => prev + 1);
+        topicsRef.current += 1;
         setShowTopic(true);
 
         // Refetch in background if pool is getting low
@@ -85,6 +100,7 @@ export default function WheelPage() {
 
   const handleCategorySelected = useCallback(
     (category: WheelCategory) => {
+      clickCount.current += 1;
       if (!hasStarted) {
         console.log('[Analytics]', 'wheel_game_start', {});
         posthog.capture("wheel_game_start", {});
@@ -101,6 +117,7 @@ export default function WheelPage() {
 
   const handleNextTopic = () => {
     if (currentCategory) {
+      clickCount.current += 1;
       console.log('[Analytics]', 'wheel_next_topic', { category: currentCategory });
       posthog.capture("wheel_next_topic", { category: currentCategory });
       setShowTopic(false);
@@ -109,6 +126,7 @@ export default function WheelPage() {
   };
 
   const handleSpinAgain = () => {
+    clickCount.current += 1;
     console.log('[Analytics]', 'wheel_spin_again', {});
     posthog.capture("wheel_spin_again");
     setShowTopic(false);

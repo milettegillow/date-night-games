@@ -37,9 +37,9 @@ export default function RevealResult({
       animate={{ rotateY: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
       style={{ transformStyle: "preserve-3d" }}
-      className="w-full max-w-sm mx-auto"
+      className="w-full max-w-sm mx-auto overflow-visible"
     >
-      <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-5">
+      <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-5 overflow-visible">
         {/* Match/mismatch indicator */}
         <div className="text-center mb-4">
           <motion.p

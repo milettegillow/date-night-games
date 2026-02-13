@@ -37,7 +37,7 @@ export default function EndScreen({
       transition={{ duration: 0.5 }}
       className="w-full max-w-sm mx-auto text-center"
     >
-      <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-8">
+      <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-8 overflow-visible">
         {/* Emoji */}
         <motion.p
           initial={{ scale: 0 }}

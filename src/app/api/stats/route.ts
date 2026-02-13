@@ -57,6 +57,7 @@ export async function GET() {
       roundsPerSessionResult,
       dropoffResult,
       wheelEngagementResult,
+      timeClicksResult,
     ] = await Promise.all([
       // Total unique sessions
       hogql(`SELECT count(DISTINCT "$session_id") FROM events WHERE "$session_id" IS NOT NULL`),
@@ -104,6 +105,9 @@ export async function GET() {
 
       // Wheel engagement: spins vs next topics
       hogql(`SELECT countIf(event = 'wheel_spin'), countIf(event = 'wheel_next_topic') FROM events WHERE event IN ('wheel_spin', 'wheel_next_topic')`),
+
+      // Time & clicks per game: avg duration, avg clicks, avg rounds
+      hogql(`SELECT properties.game, avg(toFloat(properties.duration_seconds)), avg(toFloat(properties.total_clicks)), avg(toFloat(properties.rounds_played)), count() FROM events WHERE event = 'game_session_end' GROUP BY properties.game ORDER BY avg(toFloat(properties.duration_seconds)) DESC`),
     ]);
 
     // Compute completion rate from start/complete event counts
@@ -149,6 +153,15 @@ export async function GET() {
         roundCounts: dropoffRows,
         wheelSpins: (wheelEngagementResult.results[0]?.[0] as number) ?? 0,
         wheelNextTopics: (wheelEngagementResult.results[0]?.[1] as number) ?? 0,
+        timeAndClicks: (timeClicksResult.results || []).map(
+          ([game, avgDuration, avgClicks, avgRounds, sessions]) => ({
+            game,
+            avgDuration: avgDuration != null ? Math.round(avgDuration as number) : null,
+            avgClicks: avgClicks != null ? Math.round((avgClicks as number) * 10) / 10 : null,
+            avgRounds: avgRounds != null ? Math.round((avgRounds as number) * 10) / 10 : null,
+            sessions: (sessions as number) ?? 0,
+          })
+        ),
       },
       settings: {
         nhieSpiceLevels: (nhieSpiceResult.results || []).map(

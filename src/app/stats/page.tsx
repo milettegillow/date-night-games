@@ -18,6 +18,13 @@ interface Stats {
     roundCounts: { round: number; count: number }[];
     wheelSpins: number;
     wheelNextTopics: number;
+    timeAndClicks: {
+      game: string;
+      avgDuration: number | null;
+      avgClicks: number | null;
+      avgRounds: number | null;
+      sessions: number;
+    }[];
   };
   settings: {
     nhieSpiceLevels: { level: string; count: number }[];
@@ -51,6 +58,13 @@ function formatNumber(n: number): string {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
   return n.toLocaleString();
+}
+
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  if (m === 0) return `${s}s`;
+  return `${m}m ${s}s`;
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
@@ -274,6 +288,65 @@ export default function StatsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <Skeleton className="h-24" />
                 <Skeleton className="h-24" />
+              </div>
+            )}
+          </Section>
+
+          {/* Time & Clicks */}
+          <Section title="Time & Clicks">
+            {stats ? (
+              stats.engagement.timeAndClicks.length > 0 ? (
+                <div className="space-y-4">
+                  {stats.engagement.timeAndClicks.map((tc) => {
+                    const timePerRound = tc.avgDuration != null && tc.avgRounds != null && tc.avgRounds > 0
+                      ? Math.round(tc.avgDuration / tc.avgRounds)
+                      : null;
+                    const clicksPerMin = tc.avgClicks != null && tc.avgDuration != null && tc.avgDuration > 0
+                      ? Math.round((tc.avgClicks / (tc.avgDuration / 60)) * 10) / 10
+                      : null;
+                    return (
+                      <div key={tc.game as string} className="bg-cream/5 border border-gold/10 rounded-lg p-4">
+                        <p className="font-body text-cream/60 text-xs uppercase tracking-wider mb-3">
+                          {GAME_EMOJIS[tc.game as string] || ""} {GAME_LABELS[tc.game as string] || tc.game}
+                          <span className="text-cream/30 normal-case tracking-normal"> — {tc.sessions} sessions</span>
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {tc.avgDuration != null && (
+                            <div className="text-center">
+                              <p className="font-display text-cream text-base leading-tight">{formatDuration(tc.avgDuration)}</p>
+                              <p className="font-body text-cream/40 text-xs">Avg Time</p>
+                            </div>
+                          )}
+                          {tc.avgClicks != null && (
+                            <div className="text-center">
+                              <p className="font-display text-cream text-base leading-tight">{tc.avgClicks}</p>
+                              <p className="font-body text-cream/40 text-xs">Avg Clicks</p>
+                            </div>
+                          )}
+                          {timePerRound != null && tc.game !== 'wheel' && (
+                            <div className="text-center">
+                              <p className="font-display text-cream text-base leading-tight">{formatDuration(timePerRound)}</p>
+                              <p className="font-body text-cream/40 text-xs">Per Round</p>
+                            </div>
+                          )}
+                          {clicksPerMin != null && (
+                            <div className="text-center">
+                              <p className="font-display text-cream text-base leading-tight">{clicksPerMin}</p>
+                              <p className="font-body text-cream/40 text-xs">Clicks/Min</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <EmptyState />
+              )
+            ) : (
+              <div className="space-y-3">
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
               </div>
             )}
           </Section>

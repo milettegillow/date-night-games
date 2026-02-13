@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useGame } from "@/context/GameContext";
@@ -44,6 +44,21 @@ export default function MrAndMrsPage() {
   const [p1Answer, setP1Answer] = useState<string | null>(null);
   const [p2Answer, setP2Answer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const startTime = useRef(Date.now());
+  const hasEnded = useRef(false);
+  const clickCount = useRef(0);
+  const roundRef = useRef(1);
+
+  useEffect(() => {
+    return () => {
+      if (hasEnded.current) return;
+      const duration = Math.round((Date.now() - startTime.current) / 1000);
+      const props = { game: 'mr-and-mrs', duration_seconds: duration, rounds_played: roundRef.current, total_clicks: clickCount.current, completed: false };
+      console.log('[Analytics]', 'game_session_end', props);
+      posthog.capture('game_session_end', props);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const currentQuestion = questions[0];
 
@@ -87,6 +102,7 @@ export default function MrAndMrsPage() {
   };
 
   const handleSpicyToggle = () => {
+    clickCount.current += 1;
     vibrate(20);
     const newSpicy = !spicyMode;
     setSpicyMode(newSpicy);
@@ -110,14 +126,17 @@ export default function MrAndMrsPage() {
   };
 
   const handleP1Answer = (answer: string) => {
+    clickCount.current += 1;
     vibrate(30);
     setP1Answer(answer);
     setPhase("pass-to-p2");
   };
 
   const handleP2Answer = (answer: string) => {
+    clickCount.current += 1;
     vibrate(30);
     setP2Answer(answer);
+    console.log('[Debug M&M]', `Mode: ${spicyMode ? "spicy" : "clean"}`, currentQuestion ? `| Question: ${currentQuestion.spicy ? "spicy" : "clean"}` : '');
     const matched = answer === p1Answer;
     if (matched) setScore((s) => s + 1);
     console.log('[Analytics]', 'mrsmrs_round_complete', { round, totalRounds: TOTAL_ROUNDS, matched, spicy: currentQuestion?.spicy ?? spicyMode });
@@ -126,6 +145,7 @@ export default function MrAndMrsPage() {
   };
 
   const handleNext = () => {
+    clickCount.current += 1;
     setP1Answer(null);
     setP2Answer(null);
 
@@ -139,12 +159,18 @@ export default function MrAndMrsPage() {
     if (round >= TOTAL_ROUNDS) {
       console.log('[Analytics]', 'mrsmrs_game_complete', { score, spicy: spicyMode });
       posthog.capture("mrsmrs_game_complete", { score, spicy: spicyMode });
+      const duration = Math.round((Date.now() - startTime.current) / 1000);
+      const sessionProps = { game: 'mr-and-mrs', duration_seconds: duration, rounds_played: round, total_clicks: clickCount.current, completed: true };
+      console.log('[Analytics]', 'game_session_end', sessionProps);
+      posthog.capture('game_session_end', sessionProps);
+      hasEnded.current = true;
       setQuestions(remaining);
       setPhase("end");
       return;
     }
 
     setRound((r) => r + 1);
+    roundRef.current = round + 1;
 
     const newUsed = [...usedQuestions, currentQuestion.question];
 
@@ -184,6 +210,10 @@ export default function MrAndMrsPage() {
     setP1Answer(null);
     setP2Answer(null);
     setUsedQuestions([]);
+    startTime.current = Date.now();
+    hasEnded.current = false;
+    clickCount.current = 0;
+    roundRef.current = 1;
     loadQuestions();
   };
 
@@ -224,13 +254,13 @@ export default function MrAndMrsPage() {
                 vibrate(20);
                 setSpicyMode((s) => !s);
               }}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-cream/5 border border-gold/15 transition-colors"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg bg-cream/5 border border-gold/15 transition-colors"
             >
-              <span className="font-body text-cream/70 text-sm">
-                {spicyMode ? "🌶️ Spicy" : "😇 Keep it clean"}
+              <span className={`font-body text-sm transition-colors ${spicyMode ? "text-cream/30" : "text-cream/80"}`}>
+                😇 Clean
               </span>
               <div
-                className={`w-11 h-6 rounded-full transition-colors relative ${
+                className={`w-11 h-6 rounded-full transition-colors relative flex-shrink-0 ${
                   spicyMode ? "bg-casino-red/60" : "bg-cream/20"
                 }`}
               >
@@ -241,6 +271,9 @@ export default function MrAndMrsPage() {
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 />
               </div>
+              <span className={`font-body text-sm transition-colors ${spicyMode ? "text-casino-red" : "text-cream/30"}`}>
+                Spicy 🌶️
+              </span>
             </button>
           </div>
 
@@ -276,13 +309,13 @@ export default function MrAndMrsPage() {
         {showInGameToggle && (
           <button
             onClick={handleSpicyToggle}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-body transition-colors ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-body transition-colors border ${
               spicyMode
-                ? "bg-casino-red/20 border border-casino-red/30 text-casino-red"
-                : "bg-cream/10 border border-gold/15 text-cream/40"
+                ? "bg-casino-red/20 border-casino-red/30"
+                : "bg-cream/10 border-gold/15"
             }`}
           >
-            {spicyMode ? "🌶️" : "😇"}
+            <span className={`transition-colors ${spicyMode ? "text-cream/30" : "text-cream/70"}`}>😇</span>
             <div
               className={`w-7 h-4 rounded-full transition-colors relative ${
                 spicyMode ? "bg-casino-red/40" : "bg-cream/15"
@@ -295,6 +328,7 @@ export default function MrAndMrsPage() {
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               />
             </div>
+            <span className={`transition-colors ${spicyMode ? "text-casino-red" : "text-cream/30"}`}>🌶️</span>
           </button>
         )}
       </div>
@@ -309,20 +343,12 @@ export default function MrAndMrsPage() {
       </motion.h1>
 
       {phase !== "end" && phase !== "loading" && (
-        <>
-          <ScoreTracker
-            round={round}
-            totalRounds={TOTAL_ROUNDS}
-            score={score}
-            maxScore={TOTAL_ROUNDS}
-          />
-          {/* Debug: current spicy mode + question spicy flag */}
-          <p className="font-body text-cream/30 text-[10px] mt-1">
-            Mode: {spicyMode ? "spicy" : "clean"}
-            {currentQuestion &&
-              ` | Question: ${currentQuestion.spicy ? "spicy" : "clean"}`}
-          </p>
-        </>
+        <ScoreTracker
+          round={round}
+          totalRounds={TOTAL_ROUNDS}
+          score={score}
+          maxScore={TOTAL_ROUNDS}
+        />
       )}
 
       <div className="flex-1 flex items-center justify-center w-full mt-4">
@@ -356,7 +382,7 @@ export default function MrAndMrsPage() {
             <PassPhone
               key="pass-p1"
               playerName={playerNames.player1}
-              onReady={() => setPhase("p1-answer")}
+              onReady={() => { clickCount.current += 1; setPhase("p1-answer"); }}
             />
           )}
 
@@ -400,7 +426,7 @@ export default function MrAndMrsPage() {
             <PassPhone
               key="pass"
               playerName={playerNames.player2}
-              onReady={() => setPhase("p2-answer")}
+              onReady={() => { clickCount.current += 1; setPhase("p2-answer"); }}
             />
           )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useGame } from "@/context/GameContext";
@@ -45,6 +45,21 @@ export default function WouldYouRatherPage() {
   const [p2Answer, setP2Answer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const recentCategories = useRef<string[]>([]);
+  const startTime = useRef(Date.now());
+  const hasEnded = useRef(false);
+  const clickCount = useRef(0);
+  const roundRef = useRef(1);
+
+  useEffect(() => {
+    return () => {
+      if (hasEnded.current) return;
+      const duration = Math.round((Date.now() - startTime.current) / 1000);
+      const props = { game: 'would-you-rather', duration_seconds: duration, rounds_played: roundRef.current, total_clicks: clickCount.current, completed: false };
+      console.log('[Analytics]', 'game_session_end', props);
+      posthog.capture('game_session_end', props);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const currentDilemma = dilemmas[0];
 
@@ -145,14 +160,17 @@ export default function WouldYouRatherPage() {
   };
 
   const handleP1Answer = (answer: string) => {
+    clickCount.current += 1;
     vibrate(30);
     setP1Answer(answer);
     setPhase("pass-to-p2");
   };
 
   const handleP2Answer = (answer: string) => {
+    clickCount.current += 1;
     vibrate(30);
     setP2Answer(answer);
+    console.log('[Debug WYR]', `Category: ${category}`, currentDilemma ? `| Question category: ${currentDilemma.category}` : '');
     const matched = answer === p1Answer;
     if (matched) setScore((s) => s + 1);
     console.log('[Analytics]', 'wyr_round_complete', { round, totalRounds: TOTAL_ROUNDS, matched, category: currentDilemma?.category ?? category });
@@ -179,6 +197,7 @@ export default function WouldYouRatherPage() {
   };
 
   const handleNext = () => {
+    clickCount.current += 1;
     setP1Answer(null);
     setP2Answer(null);
 
@@ -206,12 +225,18 @@ export default function WouldYouRatherPage() {
     if (round >= TOTAL_ROUNDS) {
       console.log('[Analytics]', 'wyr_game_complete', { score, category });
       posthog.capture("wyr_game_complete", { score, category });
+      const duration = Math.round((Date.now() - startTime.current) / 1000);
+      const sessionProps = { game: 'would-you-rather', duration_seconds: duration, rounds_played: round, total_clicks: clickCount.current, completed: true };
+      console.log('[Analytics]', 'game_session_end', sessionProps);
+      posthog.capture('game_session_end', sessionProps);
+      hasEnded.current = true;
       setDilemmas(remaining);
       setPhase("end");
       return;
     }
 
     setRound((r) => r + 1);
+    roundRef.current = round + 1;
 
     // If no items left for the selected category, fetch immediately
     if (remaining.length === 0) {
@@ -253,6 +278,10 @@ export default function WouldYouRatherPage() {
     setP2Answer(null);
     setUsedDilemmas([]);
     recentCategories.current = [];
+    startTime.current = Date.now();
+    hasEnded.current = false;
+    clickCount.current = 0;
+    roundRef.current = 1;
     loadDilemmas();
   };
 
@@ -315,13 +344,6 @@ export default function WouldYouRatherPage() {
     phase === "p2-answer" ||
     phase === "reveal";
 
-  // Debug label showing the actual category of the current question
-  const debugCategoryLabel = currentDilemma
-    ? category === "shuffle"
-      ? `Shuffle (${currentDilemma.category})`
-      : currentDilemma.category
-    : null;
-
   return (
     <div
       className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
@@ -366,20 +388,12 @@ export default function WouldYouRatherPage() {
       )}
 
       {phase !== "end" && phase !== "loading" && (
-        <>
-          <ScoreTracker
-            round={round}
-            totalRounds={TOTAL_ROUNDS}
-            score={score}
-            maxScore={TOTAL_ROUNDS}
-          />
-          {/* Debug: current question category */}
-          {debugCategoryLabel && (
-            <p className="font-body text-cream/30 text-[10px] mt-1">
-              Category: {debugCategoryLabel}
-            </p>
-          )}
-        </>
+        <ScoreTracker
+          round={round}
+          totalRounds={TOTAL_ROUNDS}
+          score={score}
+          maxScore={TOTAL_ROUNDS}
+        />
       )}
 
       <div className="flex-1 flex items-center justify-center w-full mt-4">
@@ -411,7 +425,7 @@ export default function WouldYouRatherPage() {
             <PassPhone
               key="pass-p1"
               playerName={playerNames.player1}
-              onReady={() => setPhase("p1-answer")}
+              onReady={() => { clickCount.current += 1; setPhase("p1-answer"); }}
             />
           )}
 
@@ -455,7 +469,7 @@ export default function WouldYouRatherPage() {
             <PassPhone
               key="pass"
               playerName={playerNames.player2}
-              onReady={() => setPhase("p2-answer")}
+              onReady={() => { clickCount.current += 1; setPhase("p2-answer"); }}
             />
           )}
 
