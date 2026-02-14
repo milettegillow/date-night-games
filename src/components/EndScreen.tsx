@@ -40,9 +40,9 @@ export default function EndScreen({
       <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-8 overflow-visible">
         {/* Emoji */}
         <motion.p
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 300 }}
           className="text-6xl mb-4"
         >
           {tier.emoji}
@@ -52,7 +52,7 @@ export default function EndScreen({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.15 }}
         >
           <p className="font-display text-5xl text-gold font-bold mb-2">
             {score}/{maxScore}

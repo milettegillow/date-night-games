@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useGame } from "@/context/GameContext";
 import SpiceToggle from "@/components/SpiceToggle";
 import ScoreTracker from "@/components/ScoreTracker";
 import EndScreen from "@/components/EndScreen";
@@ -30,6 +31,7 @@ const POINT_OPTIONS = [
 ];
 
 export default function NeverHaveIEverPage() {
+  const { globalExcludeList, addToExcludeList } = useGame();
   const [phase, setPhase] = useState<Phase>("intro");
   const [spiceLevel, setSpiceLevel] = useState<SpiceLevel>("mild");
   const [statements, setStatements] = useState<string[]>([]);
@@ -81,7 +83,7 @@ export default function NeverHaveIEverPage() {
     setPhase("loading");
     setError(null);
     try {
-      const items = await fetchStatements(spiceLevel, []);
+      const items = await fetchStatements(spiceLevel, globalExcludeList);
       setStatements(items);
       setPhase("statement");
     } catch (err) {
@@ -89,7 +91,7 @@ export default function NeverHaveIEverPage() {
       posthog.capture("api_error", { game: "never-have-i-ever", error: String(err) });
       setError("Shuffling the deck... try again!");
     }
-  }, [fetchStatements, spiceLevel]);
+  }, [fetchStatements, spiceLevel, globalExcludeList]);
 
   const handleAnswer = (points: number) => {
     clickCount.current += 1;
@@ -105,6 +107,7 @@ export default function NeverHaveIEverPage() {
 
       const remaining = statements.slice(1);
       setUsedStatements((prev) => [...prev, currentStatement]);
+      addToExcludeList([currentStatement]);
       setStatements(remaining);
 
       if (round >= TOTAL_ROUNDS) {
@@ -124,7 +127,7 @@ export default function NeverHaveIEverPage() {
 
       // Refetch if running low
       if (remaining.length < 3) {
-        fetchStatements(spiceLevel, [...usedStatements, currentStatement]).then(
+        fetchStatements(spiceLevel, [...globalExcludeList, ...usedStatements, currentStatement]).then(
           (items) => {
             setStatements((prev) => [...prev, ...items]);
           }
@@ -148,10 +151,13 @@ export default function NeverHaveIEverPage() {
   if (phase === "intro") {
     return (
       <div
-        className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
-        style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top, 0px))' }}
+        className="h-[100dvh] flex flex-col items-center px-5 overflow-hidden"
+        style={{
+          paddingTop: "max(2.5rem, env(safe-area-inset-top, 0px))",
+          paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))",
+        }}
       >
-        <div className="w-full max-w-sm mb-4">
+        <div className="w-full max-w-sm mb-2 shrink-0">
           <Link
             href="/"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
@@ -163,13 +169,13 @@ export default function NeverHaveIEverPage() {
         <motion.h1
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="font-display font-bold text-gold leading-tight mb-4"
+          className="font-display font-bold text-gold leading-tight mb-2 shrink-0"
           style={{ fontSize: 'clamp(1.6rem, 7.5vw, 2.25rem)' }}
         >
           Never Have I Ever
         </motion.h1>
 
-        <div className="flex-1 flex flex-col items-center justify-start pt-4 w-full max-w-sm">
+        <div className="flex-1 min-h-0 flex flex-col items-center justify-start pt-2 w-full max-w-sm overflow-y-auto">
           <p className="font-body text-cream/50 text-xs text-center mb-6 max-w-xs">
             How adventurous are you as a couple? Score points for every experience
             you&apos;ve shared (or not!)
@@ -196,11 +202,14 @@ export default function NeverHaveIEverPage() {
 
   return (
     <div
-      className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
-      style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top, 0px))' }}
+      className="h-[100dvh] flex flex-col items-center px-5 overflow-hidden"
+      style={{
+        paddingTop: "max(2.5rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))",
+      }}
     >
       {/* Header */}
-      <div className="w-full max-w-sm mb-4">
+      <div className="w-full max-w-sm mb-2 shrink-0">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
@@ -212,7 +221,7 @@ export default function NeverHaveIEverPage() {
       <motion.h1
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-display font-bold text-gold leading-tight mb-4"
+        className="font-display font-bold text-gold leading-tight mb-2 shrink-0"
         style={{ fontSize: 'clamp(1.6rem, 7.5vw, 2.25rem)' }}
       >
         Never Have I Ever
@@ -227,7 +236,7 @@ export default function NeverHaveIEverPage() {
         />
       )}
 
-      <div className="flex-1 flex items-center justify-center w-full mt-4">
+      <div className="flex-1 min-h-0 flex items-center justify-center w-full mt-2 overflow-y-auto">
         <AnimatePresence mode="wait">
           {phase === "loading" && (
             <motion.div

@@ -94,14 +94,14 @@ const NHIE_VARIANTS: Record<string, string[]> = {
     "Focus on bravery, dares, and adrenaline-fuelled experiences.",
     "Focus on technology mishaps, online life, and modern-world experiences.",
   ],
-  medium: [
+  spicy: [
     "Focus on romantic and sexual experiences.",
     "Focus on social deception, lying, and sneaky behaviour.",
     "Focus on nights out, alcohol, and party stories.",
     "Focus on relationship drama, exes, and romantic chaos.",
     "Focus on rule-breaking, misbehaviour, and things you shouldn't have done.",
   ],
-  spicy: [
+  villain: [
     "Focus on sexually extreme acts and bold bedroom experiences.",
     "Focus on betrayal, cheating, and morally dark behaviour.",
     "Focus on deception, manipulation, and secret-keeping.",
@@ -174,10 +174,10 @@ function getRandomSeed(): string {
 function buildExcludeClause(exclude?: string[]): string {
   if (!exclude || exclude.length === 0) return "";
 
-  // Cap at 50 most recent items to avoid overly long prompts
-  const capped = exclude.slice(-50);
+  // Cap at 100 most recent items to avoid overly long prompts
+  const capped = exclude.slice(-100);
 
-  return `\n\nCRITICAL — DO NOT REPEAT: The following items have already been used this session. Do NOT repeat them, rephrase them, or generate anything with substantially the same meaning. Each new item must be clearly distinct from every item on this list:\n${capped.map((e) => `- "${e}"`).join("\n")}`;
+  return `\n\nCRITICAL — DO NOT REPEAT: The following items have been shown across ALL games in this session. Do NOT repeat them, rephrase them, or generate anything with substantially the same meaning or theme. If an item mentions messiness, do not generate anything about messiness. If an item mentions cheating, do not generate anything about cheating. Treat the entire list as off-limits territory — not just identical matches but also variations on the same topic or concept:\n${capped.map((e) => `- "${e}"`).join("\n")}`;
 }
 
 export function buildUserPrompt(
@@ -405,11 +405,11 @@ Good examples: "stalked someone's social media back to an embarrassing depth and
 
 Bad examples (too boring, no story): "forgotten someone's name", "cried on public transport", "waved at someone who wasn't waving at me", "pretended to understand a conversation"`,
 
-        medium: `MEDIUM level. A bit sexual, a bit morally grey, but nothing dark. House party confession stories you'd tell close friends on a night out.
+        spicy: `SPICY level. A bit sexual, a bit morally grey, but nothing dark. House party confession stories you'd tell close friends on a night out.
 
 Good examples: "snooped through someone's phone", "said 'I love you' and not meant it", "been skinny dipping", "had a one-night stand", "lied about my body count", "ghosted someone", "kissed someone I'd met that same day", "sent a nude", "pretended to be single when I wasn't", "had a crush on a friend's sibling", "kissed two different people in the same night", "been escorted out of a venue by security", "faked an orgasm", "drunk-dialled an ex", "sent a nude to the wrong person"`,
 
-        spicy: `SPICY level. Genuinely shocking. The bar is: would admitting this make the room go quiet before anyone reacts? If a statement could comfortably fit in Medium, it is NOT spicy enough.
+        villain: `VILLAIN level. Genuinely shocking. The bar is: would admitting this make the room go quiet before anyone reacts? If a statement could comfortably fit in Spicy, it is NOT villain enough.
 
 Every batch MUST contain a roughly even mix of two flavours:
 (1) SEXUALLY EXTREME: acts that go well beyond "a bit naughty"
@@ -419,7 +419,7 @@ Sexually extreme examples: "had a threesome", "joined the mile high club", "hook
 
 Morally dark examples: "cheated on a partner", "lied to the police", "deliberately made someone cry to win an argument", "kept a secret that would destroy a friendship if it came out", "sabotaged someone's opportunity because I wanted it", "stolen something worth more than £50", "been the reason a couple broke up", "taken revenge on someone in a way I've never told anyone about", "pretended to be someone's friend while actively disliking them for months", "let someone else take the blame for something I did", "read someone's diary or private messages and used what I found against them"
 
-Bad examples (these belong in Medium, not Spicy): "had a one-night stand", "kissed a stranger", "sent a nude to the wrong person", "gone skinny dipping"`,
+Bad examples (these belong in Spicy, not Villain): "had a one-night stand", "kissed a stranger", "sent a nude to the wrong person", "gone skinny dipping"`,
       };
 
       return `Generate ${count} "Never have I ever" statement completions at the "${nhieLevel}" spice level.

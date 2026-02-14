@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { WHEEL_CATEGORIES, WHEEL_EMOJIS, WheelCategory } from "@/lib/types";
 import { vibrate } from "@/lib/haptics";
@@ -48,42 +48,238 @@ interface SpinWheelProps {
 export default function SpinWheel({ onCategorySelected, disabled }: SpinWheelProps) {
   const [rotation, setRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [cssTransition, setCssTransition] = useState(false);
+  const [dragHintVisible, setDragHintVisible] = useState(true);
+
+  const containerRef = useRef<HTMLDivElement>(null);
   const wheelRef = useRef<HTMLDivElement>(null);
+
+  // Drag-to-spin refs
+  const currentRotation = useRef(0);
+  const isDragging = useRef(false);
+  const lastTouchAngle = useRef(0);
+  const touchHistory = useRef<{ rotation: number; time: number }[]>([]);
+  const animFrameId = useRef(0);
+  const isAnimating = useRef(false);
+
+  // Refs for current values in event handlers (avoid stale closures)
+  const isSpinningRef = useRef(false);
+  const disabledRef = useRef(false);
+  const onCategorySelectedRef = useRef(onCategorySelected);
+  isSpinningRef.current = isSpinning;
+  disabledRef.current = disabled || false;
+  onCategorySelectedRef.current = onCategorySelected;
 
   const segmentAngle = 360 / WHEEL_CATEGORIES.length;
 
+  const resolveCategory = useCallback((finalRotation: number): WheelCategory => {
+    const normalizedAngle = ((finalRotation % 360) + 360) % 360;
+    const pointerAngle = (360 - normalizedAngle) % 360;
+    const index = Math.floor(pointerAngle / segmentAngle) % WHEEL_CATEGORIES.length;
+    return WHEEL_CATEGORIES[index];
+  }, [segmentAngle]);
+
+  // Button spin (unchanged behaviour)
   const spin = useCallback(() => {
     if (isSpinning || disabled) return;
 
     vibrate(50);
     setIsSpinning(true);
+    setCssTransition(true);
 
-    // Integer full rotations (3-5) for visual satisfaction + uniform random landing
     const fullRotations = (3 + Math.floor(Math.random() * 3)) * 360;
     const randomOffset = Math.random() * 360;
-    const newRotation = rotation + fullRotations + randomOffset;
+    const newRotation = currentRotation.current + fullRotations + randomOffset;
 
+    currentRotation.current = newRotation;
     setRotation(newRotation);
 
-    // Determine which category the pointer lands on after spin
     setTimeout(() => {
-      const normalizedAngle = newRotation % 360;
-      const pointerAngle = (360 - normalizedAngle) % 360;
-      const index = Math.floor(pointerAngle / segmentAngle) % WHEEL_CATEGORIES.length;
-
-      console.log("[Wheel] Spin result:", {
-        totalRotation: newRotation.toFixed(1),
-        mod360: normalizedAngle.toFixed(1),
-        pointerAngle: pointerAngle.toFixed(1),
-        segmentIndex: index,
-        category: WHEEL_CATEGORIES[index],
-      });
-
+      const category = resolveCategory(newRotation);
+      console.log("[Wheel] Spin result:", { category });
       setIsSpinning(false);
+      setCssTransition(false);
       vibrate([50, 30, 50]);
-      onCategorySelected(WHEEL_CATEGORIES[index]);
+      onCategorySelectedRef.current(category);
     }, 4200);
-  }, [isSpinning, disabled, rotation, segmentAngle, onCategorySelected]);
+  }, [isSpinning, disabled, resolveCategory]);
+
+  // --- Drag-to-spin ---
+
+  const getAngleFromCenter = useCallback((clientX: number, clientY: number): number => {
+    const el = containerRef.current;
+    if (!el) return 0;
+    const rect = el.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    return Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
+  }, []);
+
+  const handleDragStart = useCallback((clientX: number, clientY: number) => {
+    if (isSpinningRef.current || disabledRef.current || isAnimating.current) return;
+    isDragging.current = true;
+    lastTouchAngle.current = getAngleFromCenter(clientX, clientY);
+    touchHistory.current = [{ rotation: currentRotation.current, time: Date.now() }];
+    if (containerRef.current) containerRef.current.style.cursor = "grabbing";
+  }, [getAngleFromCenter]);
+
+  const handleDragMove = useCallback((clientX: number, clientY: number) => {
+    if (!isDragging.current) return;
+    const angle = getAngleFromCenter(clientX, clientY);
+    let delta = angle - lastTouchAngle.current;
+    // Normalize to [-180, 180] for angle wrapping
+    while (delta > 180) delta -= 360;
+    while (delta < -180) delta += 360;
+    lastTouchAngle.current = angle;
+
+    currentRotation.current += delta;
+    if (wheelRef.current) {
+      wheelRef.current.style.transform = `rotate(${currentRotation.current}deg)`;
+    }
+
+    const now = Date.now();
+    touchHistory.current.push({ rotation: currentRotation.current, time: now });
+    if (touchHistory.current.length > 5) {
+      touchHistory.current = touchHistory.current.slice(-5);
+    }
+  }, [getAngleFromCenter]);
+
+  const handleDragEnd = useCallback(() => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    if (containerRef.current) containerRef.current.style.cursor = "";
+
+    const history = touchHistory.current;
+    if (history.length < 2) {
+      setRotation(currentRotation.current);
+      return;
+    }
+
+    const first = history[0];
+    const last = history[history.length - 1];
+    const dt = last.time - first.time;
+    if (dt === 0) {
+      setRotation(currentRotation.current);
+      return;
+    }
+
+    let velocity = (last.rotation - first.rotation) / dt; // deg/ms
+
+    // Too slow — not a real flick
+    if (Math.abs(velocity) < 0.15) {
+      setRotation(currentRotation.current);
+      return;
+    }
+
+    // Cap velocity for max ~5s spin
+    velocity = Math.sign(velocity) * Math.min(Math.abs(velocity), 2.0);
+
+    setDragHintVisible(false);
+    vibrate(50);
+    setIsSpinning(true);
+    isAnimating.current = true;
+
+    const friction = 0.983;
+    const stopThreshold = 0.01;
+    let lastTime = performance.now();
+    let vel = velocity;
+
+    const animate = (time: number) => {
+      const frameDt = Math.min(time - lastTime, 32);
+      lastTime = time;
+
+      vel *= Math.pow(friction, frameDt / 16);
+      currentRotation.current += vel * frameDt;
+
+      if (wheelRef.current) {
+        wheelRef.current.style.transform = `rotate(${currentRotation.current}deg)`;
+      }
+
+      if (Math.abs(vel) > stopThreshold) {
+        animFrameId.current = requestAnimationFrame(animate);
+      } else {
+        isAnimating.current = false;
+        const finalRotation = currentRotation.current;
+        setRotation(finalRotation);
+        setIsSpinning(false);
+
+        const category = resolveCategory(finalRotation);
+        console.log("[Wheel] Drag spin result:", { category });
+        vibrate([50, 30, 50]);
+        onCategorySelectedRef.current(category);
+      }
+    };
+
+    animFrameId.current = requestAnimationFrame(animate);
+  }, [resolveCategory]);
+
+  // Attach touch/mouse event listeners (non-passive for preventDefault)
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let mouseActive = false;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if ((e.target as HTMLElement).closest("button")) return;
+      e.preventDefault();
+      handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDragging.current) return;
+      e.preventDefault();
+      handleDragMove(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!isDragging.current) return;
+      e.preventDefault();
+      handleDragEnd();
+    };
+
+    const onMouseDown = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).closest("button")) return;
+      mouseActive = true;
+      handleDragStart(e.clientX, e.clientY);
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!mouseActive) return;
+      handleDragMove(e.clientX, e.clientY);
+    };
+
+    const onMouseUp = () => {
+      if (!mouseActive) return;
+      mouseActive = false;
+      handleDragEnd();
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd, { passive: false });
+    el.addEventListener("touchcancel", onTouchEnd, { passive: false });
+    el.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+      el.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [handleDragStart, handleDragMove, handleDragEnd]);
+
+  // Cleanup animation on unmount
+  useEffect(() => {
+    return () => {
+      if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
+    };
+  }, []);
 
   const size = 300;
   const center = size / 2;
@@ -117,8 +313,15 @@ export default function SpinWheel({ onCategorySelected, disabled }: SpinWheelPro
 
   return (
     <div
-      className="relative flex items-center justify-center"
-      style={{ width: "min(85vw, 40vh, 350px)", aspectRatio: "1" }}
+      ref={containerRef}
+      className="relative flex items-center justify-center select-none"
+      style={{
+        width: "min(70vw, 300px)",
+        maxHeight: "100%",
+        aspectRatio: "1",
+        touchAction: "none",
+        cursor: isSpinning ? "default" : "grab",
+      }}
     >
       {/* Pointer at top */}
       <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-10">
@@ -139,7 +342,7 @@ export default function SpinWheel({ onCategorySelected, disabled }: SpinWheelPro
         className="w-full h-full"
         style={{
           transform: `rotate(${rotation}deg)`,
-          transition: isSpinning
+          transition: cssTransition
             ? "transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)"
             : "none",
         }}
@@ -252,6 +455,13 @@ export default function SpinWheel({ onCategorySelected, disabled }: SpinWheelPro
       >
         {isSpinning ? "..." : "SPIN"}
       </motion.button>
+
+      {/* Drag hint — disappears after first drag spin */}
+      {dragHintVisible && !isSpinning && (
+        <p className="absolute -bottom-5 left-0 right-0 text-center font-body text-cream/25 text-xs pointer-events-none">
+          or drag to spin
+        </p>
+      )}
     </div>
   );
 }

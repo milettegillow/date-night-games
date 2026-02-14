@@ -43,9 +43,9 @@ export default function RevealResult({
         {/* Match/mismatch indicator */}
         <div className="text-center mb-4">
           <motion.p
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 400 }}
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 400 }}
             className="text-4xl mb-2"
           >
             {matched ? "❤️" : "💔"}
@@ -53,7 +53,7 @@ export default function RevealResult({
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.2 }}
             className={`font-body text-sm ${matched ? "text-gold" : "text-silver"}`}
           >
             {matched ? matchMessage : mismatchMessage}
@@ -62,7 +62,7 @@ export default function RevealResult({
             <motion.p
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.15 }}
               className="font-display text-gold text-lg font-bold"
             >
               +1

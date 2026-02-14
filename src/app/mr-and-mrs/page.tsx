@@ -34,7 +34,7 @@ const TIERS = [
 ];
 
 export default function MrAndMrsPage() {
-  const { playerNames } = useGame();
+  const { playerNames, globalExcludeList, addToExcludeList } = useGame();
   const [phase, setPhase] = useState<Phase>("names");
   const [spicyMode, setSpicyMode] = useState(false);
   const [questions, setQuestions] = useState<MrAndMrsQuestion[]>([]);
@@ -85,7 +85,7 @@ export default function MrAndMrsPage() {
     setPhase("loading");
     setError(null);
     try {
-      const items = await fetchQuestions(usedQuestions, spicyMode);
+      const items = await fetchQuestions([...globalExcludeList, ...usedQuestions], spicyMode);
       setQuestions(items);
       setPhase("pass-to-p1");
     } catch (err) {
@@ -93,7 +93,7 @@ export default function MrAndMrsPage() {
       posthog.capture("api_error", { game: "mr-and-mrs", error: String(err) });
       setError("Shuffling the deck... try again!");
     }
-  }, [fetchQuestions, usedQuestions, spicyMode]);
+  }, [fetchQuestions, usedQuestions, spicyMode, globalExcludeList]);
 
   const handleStart = () => {
     console.log('[Analytics]', 'mrsmrs_game_start', { spicy: spicyMode });
@@ -115,7 +115,7 @@ export default function MrAndMrsPage() {
 
     if (matchingCount < 3) {
       console.log("[M&M] Not enough matching questions, fetching...");
-      fetchQuestions(usedQuestions, newSpicy).then((items) => {
+      fetchQuestions([...globalExcludeList, ...usedQuestions], newSpicy).then((items) => {
         console.log(
           "[M&M] Fetched batch:",
           items.map((q) => ({ q: q.question.slice(0, 40), spicy: q.spicy })),
@@ -152,6 +152,7 @@ export default function MrAndMrsPage() {
     // Move to next question
     let remaining = questions.slice(1);
     setUsedQuestions((prev) => [...prev, currentQuestion.question]);
+    addToExcludeList([currentQuestion.question]);
 
     // Filter to only show questions matching current mode
     remaining = remaining.filter((q) => q.spicy === spicyMode);
@@ -179,7 +180,7 @@ export default function MrAndMrsPage() {
       setQuestions([]);
       setPhase("loading");
       setError(null);
-      fetchQuestions(newUsed, spicyMode)
+      fetchQuestions([...globalExcludeList, ...newUsed], spicyMode)
         .then((items) => {
           setQuestions(items);
           setPhase("pass-to-p1");
@@ -196,7 +197,7 @@ export default function MrAndMrsPage() {
 
     // Refetch if running low
     if (remaining.length < 3) {
-      fetchQuestions(newUsed, spicyMode).then((items) => {
+      fetchQuestions([...globalExcludeList, ...newUsed], spicyMode).then((items) => {
         setQuestions((prev) => [...prev, ...items]);
       });
     }
@@ -293,11 +294,14 @@ export default function MrAndMrsPage() {
 
   return (
     <div
-      className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
-      style={{ paddingTop: "max(2.5rem, env(safe-area-inset-top, 0px))" }}
+      className="h-[100dvh] flex flex-col items-center px-5 overflow-hidden"
+      style={{
+        paddingTop: "max(2.5rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))",
+      }}
     >
       {/* Header */}
-      <div className="w-full max-w-sm mb-4 flex items-center justify-between">
+      <div className="w-full max-w-sm mb-2 shrink-0 flex items-center justify-between">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
@@ -336,7 +340,7 @@ export default function MrAndMrsPage() {
       <motion.h1
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-display font-bold text-gold leading-tight mb-4"
+        className="font-display font-bold text-gold leading-tight mb-2 shrink-0"
         style={{ fontSize: 'clamp(2.25rem, 11vw, 3rem)' }}
       >
         Mr & Mrs
@@ -351,7 +355,7 @@ export default function MrAndMrsPage() {
         />
       )}
 
-      <div className="flex-1 flex items-center justify-center w-full mt-4">
+      <div className="flex-1 min-h-0 flex items-center justify-center w-full mt-2 overflow-y-auto">
         <AnimatePresence mode="wait">
           {phase === "loading" && (
             <motion.div

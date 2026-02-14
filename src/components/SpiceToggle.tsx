@@ -6,8 +6,8 @@ import { vibrate } from "@/lib/haptics";
 
 const options: { level: SpiceLevel; label: string }[] = [
   { level: "mild", label: "Mild 🌸" },
-  { level: "medium", label: "Medium 🔥" },
   { level: "spicy", label: "Spicy 🌶️" },
+  { level: "villain", label: "Villain 😈" },
 ];
 
 interface SpiceToggleProps {

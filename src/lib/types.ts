@@ -1,6 +1,6 @@
 export type GameId = 'wheel' | 'mr-and-mrs' | 'never-have-i-ever' | 'would-you-rather';
 
-export type SpiceLevel = 'mild' | 'medium' | 'spicy';
+export type SpiceLevel = 'mild' | 'spicy' | 'villain';
 
 export type WheelCategory =
   | 'Funny Stories'

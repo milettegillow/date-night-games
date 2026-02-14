@@ -3,12 +3,14 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useGame } from "@/context/GameContext";
 import SpinWheel from "@/components/SpinWheel";
 import LoadingState from "@/components/LoadingState";
 import { WheelCategory, WHEEL_EMOJIS } from "@/lib/types";
 import posthog from "posthog-js";
 
 export default function WheelPage() {
+  const { globalExcludeList, addToExcludeList } = useGame();
   const [currentCategory, setCurrentCategory] = useState<WheelCategory | null>(
     null,
   );
@@ -64,7 +66,7 @@ export default function WheelPage() {
 
         // Fetch if pool is empty
         if (pool.length === 0) {
-          pool = await fetchTopics(category, usedTopics);
+          pool = await fetchTopics(category, [...globalExcludeList, ...usedTopics]);
           setTopicPools((prev) => ({ ...prev, [category]: pool }));
         }
 
@@ -73,6 +75,7 @@ export default function WheelPage() {
         const remaining = pool.slice(1);
         setTopicPools((prev) => ({ ...prev, [category]: remaining }));
         setUsedTopics((prev) => [...prev, topic]);
+        addToExcludeList([topic]);
         setCurrentTopic(topic);
         setTopicsExplored((prev) => prev + 1);
         topicsRef.current += 1;
@@ -80,7 +83,7 @@ export default function WheelPage() {
 
         // Refetch in background if pool is getting low
         if (remaining.length < 2) {
-          fetchTopics(category, [...usedTopics, topic]).then((newTopics) => {
+          fetchTopics(category, [...globalExcludeList, ...usedTopics, topic]).then((newTopics) => {
             setTopicPools((prev) => ({
               ...prev,
               [category]: [...(prev[category] || []), ...newTopics],
@@ -95,7 +98,7 @@ export default function WheelPage() {
         setIsLoading(false);
       }
     },
-    [topicPools, usedTopics, fetchTopics],
+    [topicPools, usedTopics, fetchTopics, globalExcludeList, addToExcludeList],
   );
 
   const handleCategorySelected = useCallback(
@@ -136,11 +139,14 @@ export default function WheelPage() {
 
   return (
     <div
-      className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
-      style={{ paddingTop: "max(2.5rem, env(safe-area-inset-top, 0px))" }}
+      className="h-[100dvh] flex flex-col items-center px-5 overflow-hidden"
+      style={{
+        paddingTop: "max(2.5rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))",
+      }}
     >
       {/* Header */}
-      <div className="w-full max-w-sm mb-4">
+      <div className="w-full max-w-sm mb-2 shrink-0">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
@@ -152,20 +158,22 @@ export default function WheelPage() {
       <motion.h1
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-display font-bold text-gold leading-tight mb-4"
+        className="font-display font-bold text-gold leading-tight mb-3 shrink-0"
         style={{ fontSize: "clamp(1.75rem, 8.5vw, 2.5rem)" }}
       >
         Conversation Wheel
       </motion.h1>
 
-      {/* Wheel */}
-      <SpinWheel
-        onCategorySelected={handleCategorySelected}
-        disabled={isLoading}
-      />
+      {/* Wheel — shrinks if needed, no vertical centering */}
+      <div className="shrink min-h-0 flex justify-center mb-3">
+        <SpinWheel
+          onCategorySelected={handleCategorySelected}
+          disabled={isLoading}
+        />
+      </div>
 
-      {/* Topic display area — fills remaining space */}
-      <div className="mt-4 w-full max-w-sm flex-1 flex items-start justify-center">
+      {/* Topic display area */}
+      <div className="w-full max-w-sm shrink-0">
         <AnimatePresence mode="wait">
           {isLoading && (
             <motion.div
@@ -208,8 +216,8 @@ export default function WheelPage() {
               className="w-full"
               style={{ transformStyle: "preserve-3d" }}
             >
-              <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-5">
-                <p className="font-body text-gold/60 text-xs uppercase tracking-wider mb-2">
+              <div className="bg-cream/10 backdrop-blur-sm border border-gold/20 rounded-xl p-4 max-h-[30vh] overflow-y-auto">
+                <p className="font-body text-gold/60 text-xs uppercase tracking-wider mb-1">
                   {currentCategory && WHEEL_EMOJIS[currentCategory]}{" "}
                   {currentCategory}
                 </p>
@@ -219,7 +227,7 @@ export default function WheelPage() {
               </div>
 
               {/* Action buttons */}
-              <div className="flex gap-3 mt-4">
+              <div className="flex gap-3 mt-3">
                 <button
                   onClick={handleNextTopic}
                   className="flex-1 py-3 rounded-lg bg-gold/20 text-gold font-body text-sm font-medium hover:bg-gold/30 transition-colors"
@@ -249,6 +257,9 @@ export default function WheelPage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Spacer — absorbs remaining space below content */}
+      <div className="flex-1" />
     </div>
   );
 }

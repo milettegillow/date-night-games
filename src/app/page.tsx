@@ -5,7 +5,13 @@ import { motion } from "framer-motion";
 
 export default function Home() {
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center px-5 py-8 safe-top safe-bottom table-pattern">
+    <div
+      className="h-[100dvh] flex flex-col items-center justify-center px-5 overflow-hidden table-pattern"
+      style={{
+        paddingTop: "max(2rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(2rem, env(safe-area-inset-bottom, 0px))",
+      }}
+    >
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

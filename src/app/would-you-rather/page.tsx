@@ -34,7 +34,7 @@ const TIERS = [
 ];
 
 export default function WouldYouRatherPage() {
-  const { playerNames } = useGame();
+  const { playerNames, globalExcludeList, addToExcludeList } = useGame();
   const [phase, setPhase] = useState<Phase>("names");
   const [category, setCategory] = useState<WyrCategory>("shuffle");
   const [dilemmas, setDilemmas] = useState<WouldYouRatherDilemma[]>([]);
@@ -118,7 +118,7 @@ export default function WouldYouRatherPage() {
       setPhase("loading");
       setError(null);
       try {
-        let items = await fetchDilemmas(targetCat, usedDilemmas);
+        let items = await fetchDilemmas(targetCat, [...globalExcludeList, ...usedDilemmas]);
         if (targetCat === "shuffle") {
           items = enforceShuffleOrder(items);
         }
@@ -131,7 +131,7 @@ export default function WouldYouRatherPage() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fetchDilemmas, usedDilemmas, category]
+    [fetchDilemmas, usedDilemmas, category, globalExcludeList]
   );
 
   const handleStart = () => {
@@ -152,7 +152,7 @@ export default function WouldYouRatherPage() {
     if (newCat !== "shuffle") {
       const hasEnough = dilemmas.filter((d) => d.category === newCat).length >= 3;
       if (!hasEnough) {
-        fetchDilemmas(newCat, usedDilemmas).then((items) => {
+        fetchDilemmas(newCat, [...globalExcludeList, ...usedDilemmas]).then((items) => {
           setDilemmas((prev) => [...prev, ...items]);
         });
       }
@@ -221,6 +221,7 @@ export default function WouldYouRatherPage() {
 
     const newUsed = [...usedDilemmas, dilemmaStr];
     setUsedDilemmas(newUsed);
+    addToExcludeList([dilemmaStr]);
 
     if (round >= TOTAL_ROUNDS) {
       console.log('[Analytics]', 'wyr_game_complete', { score, category });
@@ -243,7 +244,7 @@ export default function WouldYouRatherPage() {
       setDilemmas([]);
       setPhase("loading");
       setError(null);
-      fetchDilemmas(category, newUsed)
+      fetchDilemmas(category, [...globalExcludeList, ...newUsed])
         .then((items) => {
           if (category === "shuffle") {
             items = enforceShuffleOrder(items);
@@ -263,7 +264,7 @@ export default function WouldYouRatherPage() {
 
     // Background refetch if running low
     if (remaining.length < 3) {
-      fetchDilemmas(category, newUsed).then((items) => {
+      fetchDilemmas(category, [...globalExcludeList, ...newUsed]).then((items) => {
         setDilemmas((prev) => [...prev, ...items]);
       });
     }
@@ -346,11 +347,14 @@ export default function WouldYouRatherPage() {
 
   return (
     <div
-      className="min-h-[100dvh] flex flex-col items-center px-5 pb-6 safe-bottom"
-      style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top, 0px))' }}
+      className="h-[100dvh] flex flex-col items-center px-5 overflow-hidden"
+      style={{
+        paddingTop: "max(2.5rem, env(safe-area-inset-top, 0px))",
+        paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))",
+      }}
     >
       {/* Header */}
-      <div className="w-full max-w-sm mb-4">
+      <div className="w-full max-w-sm mb-2 shrink-0">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cream/10 border border-gold/20 font-body text-cream/70 text-sm hover:bg-cream/15 hover:text-cream transition-colors"
@@ -362,7 +366,7 @@ export default function WouldYouRatherPage() {
       <motion.h1
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-display font-bold text-gold leading-tight mb-3"
+        className="font-display font-bold text-gold leading-tight mb-2 shrink-0"
         style={{ fontSize: 'clamp(1.75rem, 8vw, 2.5rem)' }}
       >
         Would You Rather
@@ -370,7 +374,7 @@ export default function WouldYouRatherPage() {
 
       {/* Category tabs */}
       {showCategoryTabs && (
-        <div className="flex gap-1.5 mb-3 w-full max-w-sm">
+        <div className="flex gap-1.5 mb-2 w-full max-w-sm shrink-0">
           {WYR_CATEGORIES.map((cat) => (
             <button
               key={cat.value}
@@ -396,7 +400,7 @@ export default function WouldYouRatherPage() {
         />
       )}
 
-      <div className="flex-1 flex items-center justify-center w-full mt-4">
+      <div className="flex-1 min-h-0 flex items-center justify-center w-full mt-2 overflow-y-auto">
         <AnimatePresence mode="wait">
           {phase === "loading" && (
             <motion.div

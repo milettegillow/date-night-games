@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
 interface Stats {
   hero: {
+    uniqueVisitors: number;
+    uniquePlayers: number;
     sessions: number;
     gamesPlayed: number;
     totalInteractions: number;
@@ -31,12 +33,15 @@ interface Stats {
     mrsmrsSpicy: { spicyPercent: number; total: number };
     wyrCategories: { category: string; count: number }[];
   };
+  countries: { country: string; sessions: number }[];
   funFacts: {
     avgMrsmrsScore: number | null;
     avgNhieScore: number | null;
     topWheelCategory: string | null;
     wyrAgreementRate: number | null;
   };
+  excludingTestUsers: boolean;
+  filteredEvents: number | null;
   updatedAt: string;
 }
 
@@ -65,6 +70,30 @@ function formatDuration(seconds: number): string {
   const s = seconds % 60;
   if (m === 0) return `${s}s`;
   return `${m}m ${s}s`;
+}
+
+const COUNTRY_FLAGS: Record<string, string> = {
+  "United States": "🇺🇸", "Canada": "🇨🇦", "United Kingdom": "🇬🇧",
+  "Australia": "🇦🇺", "Germany": "🇩🇪", "France": "🇫🇷",
+  "Netherlands": "🇳🇱", "Brazil": "🇧🇷", "India": "🇮🇳",
+  "Japan": "🇯🇵", "South Korea": "🇰🇷", "Mexico": "🇲🇽",
+  "Spain": "🇪🇸", "Italy": "🇮🇹", "Sweden": "🇸🇪",
+  "Norway": "🇳🇴", "Denmark": "🇩🇰", "Finland": "🇫🇮",
+  "Poland": "🇵🇱", "Ireland": "🇮🇪", "New Zealand": "🇳🇿",
+  "Singapore": "🇸🇬", "Portugal": "🇵🇹", "Belgium": "🇧🇪",
+  "Switzerland": "🇨🇭", "Austria": "🇦🇹", "South Africa": "🇿🇦",
+  "Argentina": "🇦🇷", "Chile": "🇨🇱", "Colombia": "🇨🇴",
+  "Philippines": "🇵🇭", "Indonesia": "🇮🇩", "Thailand": "🇹🇭",
+  "Vietnam": "🇻🇳", "Malaysia": "🇲🇾", "Turkey": "🇹🇷",
+  "Israel": "🇮🇱", "Romania": "🇷🇴", "Czech Republic": "🇨🇿",
+  "Czechia": "🇨🇿", "Hungary": "🇭🇺", "Ukraine": "🇺🇦",
+  "Greece": "🇬🇷", "Egypt": "🇪🇬", "Nigeria": "🇳🇬",
+  "Kenya": "🇰🇪", "Pakistan": "🇵🇰", "Bangladesh": "🇧🇩",
+  "China": "🇨🇳", "Taiwan": "🇹🇼", "Hong Kong": "🇭🇰",
+};
+
+function getFlag(country: string): string {
+  return COUNTRY_FLAGS[country] || "🌍";
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
@@ -115,9 +144,12 @@ function BarChart({
 export default function StatsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState(false);
+  const [excludeTestUsers, setExcludeTestUsers] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/stats")
+  const fetchStats = useCallback((exclude: boolean) => {
+    setStats(null);
+    setError(false);
+    fetch(`/api/stats?excludeTestUsers=${exclude}`)
       .then((res) => {
         if (!res.ok) throw new Error();
         return res.json();
@@ -125,6 +157,10 @@ export default function StatsPage() {
       .then(setStats)
       .catch(() => setError(true));
   }, []);
+
+  useEffect(() => {
+    fetchStats(excludeTestUsers);
+  }, [fetchStats, excludeTestUsers]);
 
   const minutesAgo = stats
     ? Math.max(
@@ -156,11 +192,24 @@ export default function StatsPage() {
       >
         Live Stats
       </motion.h1>
-      <p className="font-body text-cream/40 text-xs mb-6">
+      <p className="font-body text-cream/40 text-xs mb-3">
         {minutesAgo
           ? `Updated ${minutesAgo === 1 ? "just now" : `${minutesAgo}m ago`}`
           : "Loading..."}
       </p>
+
+      {/* Test user toggle */}
+      <label className="flex items-center gap-2 mb-6 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={excludeTestUsers}
+          onChange={(e) => setExcludeTestUsers(e.target.checked)}
+          className="accent-gold w-3.5 h-3.5 rounded"
+        />
+        <span className="font-body text-cream/30 text-xs">
+          Exclude test users
+        </span>
+      </label>
 
       {error && (
         <div className="text-center py-12">
@@ -180,14 +229,24 @@ export default function StatsPage() {
             {stats ? (
               <>
                 <HeroStat
+                  value={formatNumber(stats.hero.uniqueVisitors)}
+                  label="Visitors"
+                  delay={0}
+                />
+                <HeroStat
+                  value={formatNumber(stats.hero.uniquePlayers)}
+                  label="Players"
+                  delay={0.05}
+                />
+                <HeroStat
                   value={formatNumber(stats.hero.sessions)}
                   label="Sessions"
-                  delay={0}
+                  delay={0.1}
                 />
                 <HeroStat
                   value={formatNumber(stats.hero.gamesPlayed)}
                   label="Games Played"
-                  delay={0.1}
+                  delay={0.15}
                 />
                 <HeroStat
                   value={formatNumber(stats.hero.totalInteractions)}
@@ -197,6 +256,8 @@ export default function StatsPage() {
               </>
             ) : (
               <>
+                <Skeleton className="h-20" />
+                <Skeleton className="h-20" />
                 <Skeleton className="h-20" />
                 <Skeleton className="h-20" />
                 <Skeleton className="h-20" />
@@ -216,6 +277,25 @@ export default function StatsPage() {
                   labelFn={(g) =>
                     `${GAME_EMOJIS[g] || ""}  ${GAME_LABELS[g] || g}`
                   }
+                />
+              ) : (
+                <EmptyState />
+              )
+            ) : (
+              <SkeletonBars />
+            )}
+          </Section>
+
+          {/* Players Around the World */}
+          <Section title="Players Around the World">
+            {stats ? (
+              stats.countries.length > 0 ? (
+                <BarChart
+                  items={stats.countries.map((c) => ({
+                    label: c.country as string,
+                    count: c.sessions as number,
+                  }))}
+                  labelFn={(c) => `${getFlag(c)}  ${c}`}
                 />
               ) : (
                 <EmptyState />
@@ -368,10 +448,10 @@ export default function StatsPage() {
                       }))}
                       labelFn={(l) =>
                         l === "mild"
-                          ? "😇 Mild"
-                          : l === "medium"
-                            ? "😏 Medium"
-                            : "🔥 Spicy"
+                          ? "🌸 Mild"
+                          : l === "spicy"
+                            ? "🌶️ Spicy"
+                            : "😈 Villain"
                       }
                     />
                   </div>
@@ -480,6 +560,11 @@ export default function StatsPage() {
           {/* Footer */}
           <div className="text-center pt-4 pb-2">
             <div className="h-px w-48 mx-auto bg-gradient-to-r from-transparent via-gold/20 to-transparent mb-4" />
+            {stats?.excludingTestUsers && stats.filteredEvents != null && (
+              <p className="font-body text-cream/20 text-xs mb-2">
+                Excluding 3 test users ({formatNumber(stats.filteredEvents)} events filtered)
+              </p>
+            )}
             <p className="font-body text-cream/20 text-xs">
               Built with PostHog
             </p>
