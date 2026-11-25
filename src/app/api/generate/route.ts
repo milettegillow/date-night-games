@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     const message = await client.messages.create({
       model: "claude-sonnet-5-5",
-      max_tokens: 2048,
+      max_tokens: 16000,
       system: getSystemPrompt(),
       messages: [
         {
@@ -39,8 +39,10 @@ export async function POST(request: Request) {
       ],
     });
 
-    const text =
-      message.content[0].type === "text" ? message.content[0].text : "";
+    const textBlock = message.content.find(
+      (b): b is Anthropic.TextBlock => b.type === "text"
+    );
+    const text = textBlock?.text ?? "";
 
     // Extract JSON from response (handle potential markdown fencing)
     const jsonMatch = text.match(/\[[\s\S]*\]/);
